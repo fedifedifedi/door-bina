@@ -246,6 +246,16 @@
     cadeau: 'Montrez cet écran au point de retour des vélos : un cadeau local vous attend.'
   };
 
+  /* Point de retour des vélos : la course au cadeau se termine ici.
+     À REMPLACER par l'adresse réelle de l'agence (coordonnées provisoires : Salammbô). */
+  window.DOORBINA_RETOUR = {
+    id: 0,
+    nom: 'Point de retour des vélos',
+    court: 'Retour',
+    lat: 36.8400, lng: 10.3236,
+    texte: 'Rapportez les vélos à l’agence Door Bina. Le premier groupe arrivé gagne le cadeau du jour.'
+  };
+
   /* Cadre de la carte stylisée hors ligne (le trait de côte est dessiné pour ce cadre). */
   window.DOORBINA_MAP = { minLat: 36.836, maxLat: 36.870, minLng: 10.312, maxLng: 10.346 };
 

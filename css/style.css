@@ -428,6 +428,21 @@ fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; }
 .souvenir { margin: 32px 0 0; padding: 20px 24px; background: var(--ivoire); border-left: 4px solid var(--ocre); font: italic 600 22px/1.4 var(--serif); }
 .souvenir cite { display: block; margin-top: 8px; font: 400 14px var(--sans); color: var(--gris); font-style: normal; }
 
+/* ---------- Course au cadeau et ticket d'arrivée ---------- */
+.course { margin-top: 18px; background: var(--ivoire); border-top: 4px solid var(--ocre); padding: 24px 22px; }
+.course h2 { margin-bottom: 8px; }
+.chrono-box { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; background: var(--noir); color: var(--pierre); border-radius: var(--radius); padding: 14px 18px; margin: 14px 0 18px; }
+.chrono-box span { font: 700 12px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--ocre); }
+.chrono-box strong { font: 600 40px/1 var(--sans); font-variant-numeric: tabular-nums; }
+.lm.retour { background: var(--ivoire); border: 2px solid var(--noir); font-size: 15px; }
+.ticket .arrivee { font-size: 17px; }
+.ticket-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0; position: relative; z-index: 1; }
+.ticket-grid div { border: 1px solid rgba(202,130,60,.8); border-radius: var(--radius); padding: 10px 4px; display: grid; }
+.ticket-grid strong { font: 600 24px/1.1 var(--serif); color: var(--ocre); }
+.ticket-grid span { font-size: 12px; opacity: .85; }
+.code-verif { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+.code-verif strong { font: 700 22px var(--sans); letter-spacing: .14em; color: var(--pierre); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

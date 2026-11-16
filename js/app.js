@@ -5,6 +5,7 @@
   const LIEUX = window.DOORBINA_LIEUX;
   const PAUSE = window.DOORBINA_PAUSE;
   const CODE = window.DOORBINA_CODE;
+  const RETOUR = window.DOORBINA_RETOUR;
   const MAP = window.DOORBINA_MAP;
   const TARIFS = window.DOORBINA_TARIFS;
   const N = LIEUX.length;
@@ -25,7 +26,7 @@
   /* ---------- État (sauvegardé dans le navigateur) ---------- */
   function neuf() {
     return { reservation: null, stamps: [], stage: 'start', avatar: null, ecoutes: {}, qok: {}, qfaux: {},
-      erreurs: 0, aides: 0, pauseFaite: false, codeOuvert: false, tFin: null, souvenir: '' };
+      erreurs: 0, aides: 0, pauseFaite: false, codeOuvert: false, tFin: null, tRetour: null, equipe: '', souvenir: '' };
   }
   function load() {
     try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
@@ -75,6 +76,16 @@
     let s = 'DB-';
     for (let i = 0; i < 4; i++) s += c[Math.floor(Math.random() * c.length)];
     return s;
+  }
+  // Destination actuelle sur la carte : le prochain lieu, puis le point de retour (course au cadeau)
+  function enCourse() { return S.codeOuvert && !S.tRetour; }
+  function cible() { return LIEUX[S.stamps.length] || (enCourse() ? RETOUR : null); }
+  function chrono(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return `${Math.floor(s / 3600) ? Math.floor(s / 3600) + ':' : ''}${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  }
+  function codeVerif() {
+    return `${S.reservation ? S.reservation.code : 'DB'}-${(S.tRetour % 2176782336).toString(36).toUpperCase().padStart(6, '0')}`;
   }
   function score() { return Math.max(0, S.stamps.length * POINTS.etape - S.erreurs * POINTS.erreur - S.aides * POINTS.aide); }
 
@@ -410,7 +421,11 @@
         .bindPopup(() => popupLieu(l, i), { maxWidth: 280 })
         .on('popupopen', syncAudioUI);
     });
-    map.fitBounds(pts, { padding: [30, 30] });
+    window.L.marker([RETOUR.lat, RETOUR.lng], {
+      icon: window.L.divIcon({ className: 'mk', html: '<span class="lm retour">🏁</span>', iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -14] }),
+      title: RETOUR.nom
+    }).addTo(map).bindPopup(`<div class="pop"><p class="label">Arrivée</p><h3>${RETOUR.nom}</h3><p>${RETOUR.texte}</p></div>`);
+    map.fitBounds(enCourse() ? pts.concat([[RETOUR.lat, RETOUR.lng]]) : pts, { padding: [30, 30] });
     map.on('dragstart', () => { Live.follow = false; });
     Live.map = map;
     if (Live.pos) placerAvatar(Live.pos.lat, Live.pos.lng, Live.pos.acc);
@@ -451,7 +466,7 @@
         if (!Live.acc) Live.acc = window.L.circle([lat, lng], { radius: acc, color: '#1E5A87', weight: 1, fillOpacity: 0.08 }).addTo(map);
         else Live.acc.setLatLng([lat, lng]).setRadius(acc);
       }
-      const next = LIEUX[S.stamps.length];
+      const next = cible();
       if (next) {
         const pts = [[lat, lng], [next.lat, next.lng]];
         if (!Live.line) Live.line = window.L.polyline(pts, { color: '#CA823C', weight: 4, dashArray: '6 8' }).addTo(map);
@@ -467,7 +482,8 @@
   function majPanneau() {
     const p = $('#map-panel');
     if (!p) return;
-    const i = S.stamps.length, next = LIEUX[i];
+    const i = S.stamps.length, next = cible();
+    const retour = next === RETOUR;
     let h = '<div class="panel-row">';
     if (S.avatar) h += `<div class="panel-avatar">${avatarSvg(S.avatar)}</div>`;
     h += '<div>';
@@ -486,18 +502,23 @@
     if (next) {
       const d = Live.pos ? distance(Live.pos, next) : null;
       h += `<div class="panel-next">
-        <p class="label">Prochaine étape · ${i + 1} sur ${N}</p>
+        <p class="label">${retour ? '🏆 La course au cadeau' : `Prochaine étape · ${i + 1} sur ${N}`}</p>
         <h3>${next.nom}</h3>
-        <p>${puceStatut(next)} <span class="muted">· ${creneau(next)}</span></p>
+        ${retour ? `<p>Chrono : <strong data-chrono>${chrono(Date.now() - S.tFin)}</strong></p>`
+          : `<p>${puceStatut(next)} <span class="muted">· ${creneau(next)}</span></p>`}
         ${d != null && !Live.far ? `<p><strong>${fmtDist(d)}</strong> · ≈ ${minutesVelo(d)} min à vélo</p>` : ''}
         <a class="btn btn-block" target="_blank" rel="noopener"
           href="https://www.google.com/maps/dir/?api=1${Live.pos && !Live.far && !Live.demo ? `&origin=${Live.pos.lat},${Live.pos.lng}` : ''}&destination=${next.lat},${next.lng}&travelmode=bicycling">Itinéraire</a>
       </div>`;
-      const enJeu = S.reservation && (S.stage === 'start' || S.stage === 'route');
+      const enJeu = S.reservation && (retour || S.stage === 'start' || S.stage === 'route');
       if (d != null && d <= RAYON_VALIDATION && enJeu) {
-        h += `<div class="panel-arrive" role="status">
-          <p><strong>Vous êtes arrivé !</strong> L’audio du lieu démarre dès que vous ouvrez l’étape.</p>
-          <button class="btn btn-ocre" data-action="force">Ouvrir l’étape ${next.court}</button></div>`;
+        h += retour
+          ? `<div class="panel-arrive" role="status">
+              <p><strong>Vous êtes au point de retour !</strong> Validez votre arrivée pour arrêter le chrono.</p>
+              <button class="btn btn-ocre" data-action="retour-ok">Valider mon arrivée</button></div>`
+          : `<div class="panel-arrive" role="status">
+              <p><strong>Vous êtes arrivé !</strong> L’audio du lieu démarre dès que vous ouvrez l’étape.</p>
+              <button class="btn btn-ocre" data-action="force">Ouvrir l’étape ${next.court}</button></div>`;
         if (!Live.vibre && navigator.vibrate) { navigator.vibrate([150, 80, 150]); Live.vibre = true; }
       } else Live.vibre = false;
     } else {
@@ -511,11 +532,12 @@
     p.innerHTML = h;
   }
   function demoTrajet() {
-    const i = S.stamps.length, next = LIEUX[i];
+    const i = S.stamps.length, next = cible();
     if (!next) return;
     if (Live.watch != null && navigator.geolocation) { navigator.geolocation.clearWatch(Live.watch); Live.watch = null; }
     Live.demo = true; Live.follow = true; Live.centered = true;
     const from = i > 0 ? LIEUX[i - 1] : { lat: LIEUX[0].lat - 0.004, lng: LIEUX[0].lng - 0.003 };
+    if (next === RETOUR) Live.follow = false; // trajet long : on garde la vue d'ensemble
     const t0 = performance.now(), D = 9000;
     if (Live.raf) cancelAnimationFrame(Live.raf);
     if (Live.map) Live.map.setView([from.lat, from.lng], 16);
@@ -961,25 +983,64 @@
         </div>
       </div></section>`;
     }
-    const t0 = S.stamps[0].t, t1 = S.tFin || S.stamps[N - 1].t;
-    const min = Math.max(1, Math.round((t1 - t0) / 60000));
-    const duree = min >= 60 ? `${Math.floor(min / 60)} h ${pad(min % 60)}` : `${min} min`;
+    const t0 = S.stamps[0].t;
+    const nomSecret = CODE.mot.charAt(0) + CODE.mot.slice(1).toLowerCase();
+    const equipe = (S.equipe || (S.reservation && S.reservation.nom) || '').replace(/</g, '&lt;');
+
+    // 1) Le secret est ouvert : la course au cadeau commence
+    if (!S.tRetour) {
+      return `
+      <section class="section tight"><div class="wrap game">
+        <div class="diplome">
+          <p class="label">Le secret de Carthage</p>
+          <h1 style="text-transform:none">${nomSecret}</h1>
+          <hr class="rule">
+          <p>${CODE.secret}</p>
+        </div>
+        <div class="course">
+          <p class="label">🏆 La course au cadeau</p>
+          <h2>Le premier groupe rentré gagne !</h2>
+          <p>Le code est ouvert, le chrono tourne. Rapportez vos vélos au <strong>${RETOUR.nom.toLowerCase()}</strong> : le premier groupe arrivé aujourd’hui remporte un cadeau local.</p>
+          <div class="chrono-box"><span>Chrono</span><strong data-chrono>${chrono(Date.now() - S.tFin)}</strong></div>
+          <div class="field"><label for="f-equipe">Nom de votre équipe</label>
+            <input id="f-equipe" value="${equipe}" placeholder="Ex. Les Puniques" autocomplete="off"></div>
+        </div>
+        <div class="map-in-card" style="margin:18px 0 0">${blocCarte()}</div>
+        <div class="bloc">
+          <button class="btn btn-block" data-action="retour">Je suis au point de retour</button>
+          ${geoMsg ? `<div class="geo-msg" role="status">${geoMsg}</div>` : ''}
+        </div>
+      </div></section>`;
+    }
+
+    // 2) Arrivée validée : ticket à montrer à l'équipe Door Bina
+    const duree = (ms) => { const m = Math.max(1, Math.round(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)} h ${pad(m % 60)}` : `${m} min`; };
     return `
     <section class="section"><div class="wrap game">
-      <div class="diplome">
-        <div style="max-width:180px;margin:0 auto 12px">${logo()}</div>
-        <p class="label">Le secret de Carthage</p>
-        <h1 style="text-transform:none">${CODE.mot.charAt(0) + CODE.mot.slice(1).toLowerCase()}</h1>
-        <hr class="rule">
-        <p>${CODE.secret}</p>
-        <div class="score-box"><strong>${score()}</strong><span>points · ${duree}</span></div>
-        <p class="cadeau">🎁 ${CODE.cadeau}</p>
-        <p class="label" style="margin:0">Explorateurs de Carthage · ${dateLongue(t1)}</p>
+      <div class="diplome ticket">
+        <div style="max-width:150px;margin:0 auto 12px">${logo()}</div>
+        <p class="label">Ticket d’arrivée · Explorateurs de Carthage</p>
+        <h1 style="text-transform:none">${equipe || 'Bravo !'}</h1>
+        <p class="arrivee">Arrivés le ${dateLongue(S.tRetour)} à <strong>${new Date(S.tRetour).toLocaleTimeString('fr-FR')}</strong></p>
+        <div class="ticket-grid">
+          <div><strong>${chrono(S.tRetour - S.tFin)}</strong><span>course au cadeau</span></div>
+          <div><strong>${duree(S.tRetour - t0)}</strong><span>parcours complet</span></div>
+          <div><strong>${score()}</strong><span>points</span></div>
+        </div>
+        <p class="code-verif">Code de vérification<br><strong>${codeVerif()}</strong></p>
+        <p class="cadeau">🎁 Montrez cet écran à l’équipe Door Bina. Si vous êtes le premier groupe rentré aujourd’hui, le cadeau est à vous !</p>
+        <p class="label" style="margin:0">Secret ouvert : ${nomSecret}</p>
       </div>
       <p class="center" style="margin-top:24px"><a class="btn" href="#/carnet">Voir mon passeport</a></p>
       <p class="center"><button class="btn-link" data-action="reset">Recommencer le jeu</button></p>
     </div></section>`;
   }
+
+  // Le chrono de la course avance en direct
+  setInterval(() => {
+    if (!enCourse() || !S.tFin) return;
+    document.querySelectorAll('[data-chrono]').forEach((n) => { n.textContent = chrono(Date.now() - S.tFin); });
+  }, 1000);
 
   function vueCarnet() {
     const figs = LIEUX.map((l, i) => {
@@ -1061,6 +1122,14 @@
     if (route() !== 'jeu') location.hash = '#/jeu'; else render(true);
     if (!S.ecoutes[lieu.id]) audioToggle(lieu.id);
   }
+  function arriveeRetour() {
+    if (S.tRetour) return;
+    const champ = $('#f-equipe'); if (champ) S.equipe = champ.value.trim();
+    S.tRetour = Date.now(); geoMsg = ''; Live.demo = false;
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    save();
+    if (route() !== 'jeu') location.hash = '#/jeu'; else render(true);
+  }
   function valider(lieu, faux, aide) {
     if (faux) S.erreurs++;
     S.stamps.push({ id: lieu.id, t: Date.now(), lettre: lieu.lettre, faux: !!faux, aide: !!aide });
@@ -1087,6 +1156,18 @@
     }
 
     else if (a === 'force') { if (lieu) ouvrirLieu(lieu); }
+
+    else if (a === 'retour') {
+      if (Live.pos && distance(Live.pos, RETOUR) <= RAYON_VALIDATION) { arriveeRetour(); return; }
+      el.disabled = true; el.textContent = 'Vérification de votre position…';
+      const res = await verifierPosition(RETOUR);
+      if (res.ok) { arriveeRetour(); return; }
+      const loin = res.d != null ? `Vous semblez être à ${fmtDist(res.d)} du point de retour.` : res.raison;
+      geoMsg = `${loin} Pédalez encore, le chrono tourne ! <br><button class="btn-link" data-action="retour-ok">Validation par l’équipe Door Bina sur place</button>`;
+      render();
+    }
+
+    else if (a === 'retour-ok') { arriveeRetour(); }
 
     else if (a === 'answer') {
       if (S.qok[lieu.id]) return; // une seule chance
@@ -1155,6 +1236,7 @@
   document.addEventListener('input', (ev) => {
     if (ev.target.closest('#resa-form')) majRecap();
     if (ev.target.id === 'f-souvenir') { S.souvenir = ev.target.value; save(); }
+    if (ev.target.id === 'f-equipe') { S.equipe = ev.target.value; save(); }
   });
   document.addEventListener('change', (ev) => { if (ev.target.closest('#resa-form')) majRecap(); });
 
