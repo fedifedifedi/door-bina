@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Door Bina · Carthage à vélo</title>
+  <meta name="description" content="Door Bina : un jeu de piste à vélo, sans guide, à travers huit lieux de Carthage.">
+  <meta name="theme-color" content="#611335">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip" href="#app">Aller au contenu</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a href="#/" class="brand" aria-label="Door Bina, accueil">
+        <span class="brand-full" data-logo="full"></span>
+        <span class="brand-mini" data-logo="bike"></span>
+      </a>
+      <nav class="nav-top" aria-label="Navigation principale">
+        <a href="#/parcours" data-nav="parcours">Parcours</a>
+        <a href="#/carte" data-nav="carte">Carte</a>
+        <a href="#/reserver" data-nav="reserver">Réserver</a>
+        <a href="#/jeu" data-nav="jeu">Le jeu</a>
+        <a href="#/carnet" data-nav="carnet">Carnet</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-row">
+      <p class="label">Door Bina · Carthage à vélo</p>
+      <p class="ar" lang="ar" dir="rtl">دوربينا</p>
+    </div>
+  </footer>
+
+  <nav class="tabbar" aria-label="Navigation mobile">
+    <a href="#/" data-nav="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>Accueil</a>
+    <a href="#/carte" data-nav="carte">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.6-6-10.5a6 6 0 0 1 12 0C18 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.2"/></svg>Carte</a>
+    <a href="#/reserver" data-nav="reserver">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="15" r="4"/><circle cx="18" cy="15" r="4"/><path d="M6 15l4-6h6l2 6M10 9l2 6h0"/></svg>Réserver</a>
+    <a href="#/jeu" data-nav="jeu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-2 4-4 2 2-4z"/></svg>Le jeu</a>
+    <a href="#/carnet" data-nav="carnet">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M6 21 12 8l6 13M4 14l2 3h12l2-3"/></svg>Carnet</a>
+  </nav>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
