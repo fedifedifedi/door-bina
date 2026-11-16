@@ -246,6 +246,21 @@
     cadeau: 'Montrez cet écran au point de retour des vélos : un cadeau local vous attend.'
   };
 
+  /* Photos libres de droits (Wikimedia Commons). Le crédit de l'auteur et la licence
+     doivent rester affichés sous chaque photo. Clé = id du lieu (99 = pause thé). */
+  const cc = (fichier) => 'https://commons.wikimedia.org/wiki/File:' + fichier;
+  window.DOORBINA_PHOTOS = {
+    1: { src: 'img/01-dar-el-hout.jpg', auteur: 'Shoestring', licence: 'CC BY-SA 4.0', url: cc('Oceanographic_Museum_of_Carthage.jpg') },
+    2: { src: 'img/02-byrsa.jpg', auteur: 'BishkekRocks', licence: 'Domaine public', url: cc('Quartier_Punique.JPG') },
+    3: { src: 'img/03-cathedrale.jpg', auteur: 'Niels Elgaard Larsen', licence: 'CC BY-SA 4.0', url: cc('Acropolium.jpg') },
+    4: { src: 'img/04-musee.jpg', auteur: 'Touzrimounir', licence: 'CC BY-SA 4.0', url: cc('Carthage_National_Museum_043.jpg') },
+    5: { src: 'img/05-beit-al-hikma.jpg', auteur: 'Emna Mizouni', licence: 'CC BY-SA 4.0', url: cc('Beit_El_Hekma.jpg') },
+    6: { src: 'img/06-theatre.jpg', auteur: 'Paul SKG', licence: 'CC BY-SA 2.0', url: cc('Roman_Theater_of_Carthage.jpg') },
+    7: { src: 'img/07-mosquee.jpg', auteur: 'Asram (Wikipédia)', licence: 'CC BY-SA 2.5', url: cc('Carthage_mosquee1.jpg') },
+    8: { src: 'img/08-cimetiere.jpg', auteur: 'RAFFA Ranya', licence: 'CC BY-SA 4.0', url: cc('Carthage_American_Cemetery_of_the_Second_World_War_1.jpg') },
+    99: { src: 'img/pause-mer.jpg', auteur: 'LBM1948', licence: 'CC BY-SA 4.0', url: cc('Cartago_1992_01.jpg') }
+  };
+
   /* Point de retour des vélos : la course au cadeau se termine ici.
      À REMPLACER par l'adresse réelle de l'agence (coordonnées provisoires : Salammbô). */
   window.DOORBINA_RETOUR = {

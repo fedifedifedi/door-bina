@@ -6,6 +6,17 @@
   const PAUSE = window.DOORBINA_PAUSE;
   const CODE = window.DOORBINA_CODE;
   const RETOUR = window.DOORBINA_RETOUR;
+  const PHOTOS = window.DOORBINA_PHOTOS || {};
+
+  // Photo d'un lieu, toujours avec son crédit (obligatoire pour les licences Creative Commons)
+  function photo(id, cls = '') {
+    const p = PHOTOS[id], x = trouver(id);
+    if (!p) return '';
+    return `<figure class="photo ${cls}">
+      <img src="${p.src}" alt="${x ? x.nom : ''}" loading="lazy">
+      <figcaption>Photo : ${p.auteur} · <a href="${p.url}" target="_blank" rel="noopener">${p.licence}</a></figcaption>
+    </figure>`;
+  }
   const MAP = window.DOORBINA_MAP;
   const TARIFS = window.DOORBINA_TARIFS;
   const N = LIEUX.length;
@@ -381,6 +392,7 @@
   function popupLieu(l, i) {
     const e = etat(i);
     return `<div class="pop">
+      ${photo(l.id, 'pop-photo')}
       <p class="label">Étape ${i + 1} sur ${N}${e === 'done' ? ' · validée' : e === 'next' ? ' · prochaine' : ' · verrouillée'}</p>
       <h3>${l.nom}</h3>
       <p class="muted">${l.epoque} · ${l.theme}</p>
@@ -588,6 +600,19 @@
       </div>
     </section>
 
+    <section class="section tight">
+      <div class="wrap">
+        <p class="label">Le parcours</p>
+        <h2>Huit lieux, huit époques</h2>
+        <div class="galerie">${LIEUX.map((l, i) => `
+          <a class="galerie-item" href="#/lieu/${l.id}">
+            <img src="${PHOTOS[l.id] ? PHOTOS[l.id].src : ''}" alt="${l.nom}" loading="lazy">
+            <span><b>${ROMAINS[i]}</b> ${l.nom}<small>${l.epoque}</small></span>
+          </a>`).join('')}</div>
+        <p class="note">Photos : Wikimedia Commons, crédits sur la page de chaque lieu.</p>
+      </div>
+    </section>
+
     <section class="section alt">
       <div class="wrap">
         <p class="label">Comment ça marche</p>
@@ -612,6 +637,7 @@
       const chip = e === 'done' ? '<span class="chip done">Validé</span>' : (e === 'next' && S.reservation) ? '<span class="chip next">Prochaine</span>' : '';
       items += `<li class="lieu ${e}" id="lieu-${l.id}">
         <span class="roman">${ROMAINS[i]}</span>
+        ${photo(l.id, 'mini')}
         <p class="label">${creneau(l)}${chip}</p>
         <h3>${l.nom}</h3>
         <p class="muted">${l.epoque} · ${l.theme}</p>
@@ -670,6 +696,7 @@
     </div>
     <section class="section tight"><div class="wrap game">
       <div class="etape">
+        ${photo(l.id, 'large')}
         <p class="label">Le lieu à travers le temps</p>
         ${frise(l)}
         <div class="bloc"><p class="label">En bref</p><p>${l.fiche}</p></div>
@@ -864,6 +891,7 @@
         <div class="etape">
           <p class="label">≈ 20 minutes · face à la mer</p>
           <h2>Une pause qui fait partie de Carthage</h2>
+          ${photo(PAUSE.id)}
           <p>${PAUSE.fiche}</p>
           <div class="bloc"><p class="label">L’histoire</p>${lecteur(PAUSE)}</div>
           <div class="bloc">
@@ -956,6 +984,7 @@
         <p class="label">Étape ${done + 1} sur ${N}</p>
         <h2>${l.nom}</h2>
         <p class="muted">${l.epoque} · ${l.theme}</p>
+        ${photo(l.id)}
         ${progressPath()}
         ${corps}
       </div>
