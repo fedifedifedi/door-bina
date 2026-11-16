@@ -7,6 +7,7 @@
   const CODE = window.DOORBINA_CODE;
   const RETOUR = window.DOORBINA_RETOUR;
   const PHOTOS = window.DOORBINA_PHOTOS || {};
+  const STAFF = window.DOORBINA_STAFF || { pin: '2026', sel: 'door-bina' };
 
   // Photo d'un lieu, toujours avec son crédit (obligatoire pour les licences Creative Commons)
   function photo(id, cls = '') {
@@ -37,7 +38,7 @@
   /* ---------- État (sauvegardé dans le navigateur) ---------- */
   function neuf() {
     return { reservation: null, stamps: [], stage: 'start', avatar: null, ecoutes: {}, qok: {}, qfaux: {},
-      erreurs: 0, aides: 0, pauseFaite: false, codeOuvert: false, tFin: null, tRetour: null, equipe: '', souvenir: '' };
+      erreurs: 0, aides: 0, pauseFaite: false, codeOuvert: false, tFin: null, equipe: '', souvenir: '' };
   }
   function load() {
     try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
@@ -88,15 +89,21 @@
     for (let i = 0; i < 4; i++) s += c[Math.floor(Math.random() * c.length)];
     return s;
   }
-  // Destination actuelle sur la carte : le prochain lieu, puis le point de retour (course au cadeau)
-  function enCourse() { return S.codeOuvert && !S.tRetour; }
-  function cible() { return LIEUX[S.stamps.length] || (enCourse() ? RETOUR : null); }
-  function chrono(ms) {
-    const s = Math.max(0, Math.floor(ms / 1000));
-    return `${Math.floor(s / 3600) ? Math.floor(s / 3600) + ':' : ''}${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  // Destination actuelle sur la carte : le prochain lieu, puis le point de retour des vélos
+  function retourActif() { return !!S.codeOuvert; }
+  function cible() { return LIEUX[S.stamps.length] || (retourActif() ? RETOUR : null); }
+
+  // Score signé : l'équipe Door Bina peut vérifier qu'un score n'a pas été inventé
+  function signer(code, pts) {
+    let h = 5381;
+    for (const ch of `${STAFF.sel}|${code}|${pts}`) h = ((h * 33) ^ ch.charCodeAt(0)) >>> 0;
+    return h.toString(36).toUpperCase().slice(-4).padStart(4, '0');
   }
-  function codeVerif() {
-    return `${S.reservation ? S.reservation.code : 'DB'}-${(S.tRetour % 2176782336).toString(36).toUpperCase().padStart(6, '0')}`;
+  function codeResa() { return S.reservation ? S.reservation.code : 'DB-0000'; }
+  function codeScore() { const c = codeResa(), s = score(); return `${c}-${s}-${signer(c, s)}`; }
+  function qrScore() {
+    const c = codeResa(), s = score();
+    return 'DOORBINA-SCORE:' + JSON.stringify({ c, e: S.equipe || (S.reservation && S.reservation.nom) || '', s, n: S.stamps.length, t: S.tFin, k: signer(c, s) });
   }
   function score() { return Math.max(0, S.stamps.length * POINTS.etape - S.erreurs * POINTS.erreur - S.aides * POINTS.aide); }
 
@@ -437,7 +444,7 @@
       icon: window.L.divIcon({ className: 'mk', html: '<span class="lm retour">🏁</span>', iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -14] }),
       title: RETOUR.nom
     }).addTo(map).bindPopup(`<div class="pop"><p class="label">Arrivée</p><h3>${RETOUR.nom}</h3><p>${RETOUR.texte}</p></div>`);
-    map.fitBounds(enCourse() ? pts.concat([[RETOUR.lat, RETOUR.lng]]) : pts, { padding: [30, 30] });
+    map.fitBounds(retourActif() ? pts.concat([[RETOUR.lat, RETOUR.lng]]) : pts, { padding: [30, 30] });
     map.on('dragstart', () => { Live.follow = false; });
     Live.map = map;
     if (Live.pos) placerAvatar(Live.pos.lat, Live.pos.lng, Live.pos.acc);
@@ -514,21 +521,17 @@
     if (next) {
       const d = Live.pos ? distance(Live.pos, next) : null;
       h += `<div class="panel-next">
-        <p class="label">${retour ? '🏆 La course au cadeau' : `Prochaine étape · ${i + 1} sur ${N}`}</p>
+        <p class="label">${retour ? 'Fin du parcours · retour des vélos' : `Prochaine étape · ${i + 1} sur ${N}`}</p>
         <h3>${next.nom}</h3>
-        ${retour ? `<p>Chrono : <strong data-chrono>${chrono(Date.now() - S.tFin)}</strong></p>`
+        ${retour ? '<p class="muted">Montrez votre QR de score à l’équipe Door Bina.</p>'
           : `<p>${puceStatut(next)} <span class="muted">· ${creneau(next)}</span></p>`}
         ${d != null && !Live.far ? `<p><strong>${fmtDist(d)}</strong> · ≈ ${minutesVelo(d)} min à vélo</p>` : ''}
         <a class="btn btn-block" target="_blank" rel="noopener"
           href="https://www.google.com/maps/dir/?api=1${Live.pos && !Live.far && !Live.demo ? `&origin=${Live.pos.lat},${Live.pos.lng}` : ''}&destination=${next.lat},${next.lng}&travelmode=bicycling">Itinéraire</a>
       </div>`;
-      const enJeu = S.reservation && (retour || S.stage === 'start' || S.stage === 'route');
+      const enJeu = S.reservation && !retour && (S.stage === 'start' || S.stage === 'route');
       if (d != null && d <= RAYON_VALIDATION && enJeu) {
-        h += retour
-          ? `<div class="panel-arrive" role="status">
-              <p><strong>Vous êtes au point de retour !</strong> Validez votre arrivée pour arrêter le chrono.</p>
-              <button class="btn btn-ocre" data-action="retour-ok">Valider mon arrivée</button></div>`
-          : `<div class="panel-arrive" role="status">
+        h += `<div class="panel-arrive" role="status">
               <p><strong>Vous êtes arrivé !</strong> L’audio du lieu démarre dès que vous ouvrez l’étape.</p>
               <button class="btn btn-ocre" data-action="force">Ouvrir l’étape ${next.court}</button></div>`;
         if (!Live.vibre && navigator.vibrate) { navigator.vibrate([150, 80, 150]); Live.vibre = true; }
@@ -1012,64 +1015,175 @@
         </div>
       </div></section>`;
     }
-    const t0 = S.stamps[0].t;
     const nomSecret = CODE.mot.charAt(0) + CODE.mot.slice(1).toLowerCase();
-    const equipe = (S.equipe || (S.reservation && S.reservation.nom) || '').replace(/</g, '&lt;');
-
-    // 1) Le secret est ouvert : la course au cadeau commence
-    if (!S.tRetour) {
-      return `
-      <section class="section tight"><div class="wrap game">
-        <div class="diplome">
-          <p class="label">Le secret de Carthage</p>
-          <h1 style="text-transform:none">${nomSecret}</h1>
-          <hr class="rule">
-          <p>${CODE.secret}</p>
-        </div>
-        <div class="course">
-          <p class="label">🏆 La course au cadeau</p>
-          <h2>Le premier groupe rentré gagne !</h2>
-          <p>Le code est ouvert, le chrono tourne. Rapportez vos vélos au <strong>${RETOUR.nom.toLowerCase()}</strong> : le premier groupe arrivé aujourd’hui remporte un cadeau local.</p>
-          <div class="chrono-box"><span>Chrono</span><strong data-chrono>${chrono(Date.now() - S.tFin)}</strong></div>
-          <div class="field"><label for="f-equipe">Nom de votre équipe</label>
-            <input id="f-equipe" value="${equipe}" placeholder="Ex. Les Puniques" autocomplete="off"></div>
-        </div>
-        <div class="map-in-card" style="margin:18px 0 0">${blocCarte()}</div>
-        <div class="bloc">
-          <button class="btn btn-block" data-action="retour">Je suis au point de retour</button>
-          ${geoMsg ? `<div class="geo-msg" role="status">${geoMsg}</div>` : ''}
-        </div>
-      </div></section>`;
-    }
-
-    // 2) Arrivée validée : ticket à montrer à l'équipe Door Bina
-    const duree = (ms) => { const m = Math.max(1, Math.round(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)} h ${pad(m % 60)}` : `${m} min`; };
+    const equipe = (S.equipe || (S.reservation && S.reservation.nom) || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const aides = S.stamps.filter((s) => s.aide).length;
     return `
-    <section class="section"><div class="wrap game">
-      <div class="diplome ticket">
-        <div style="max-width:150px;margin:0 auto 12px">${logo()}</div>
-        <p class="label">Ticket d’arrivée · Explorateurs de Carthage</p>
-        <h1 style="text-transform:none">${equipe || 'Bravo !'}</h1>
-        <p class="arrivee">Arrivés le ${dateLongue(S.tRetour)} à <strong>${new Date(S.tRetour).toLocaleTimeString('fr-FR')}</strong></p>
-        <div class="ticket-grid">
-          <div><strong>${chrono(S.tRetour - S.tFin)}</strong><span>course au cadeau</span></div>
-          <div><strong>${duree(S.tRetour - t0)}</strong><span>parcours complet</span></div>
-          <div><strong>${score()}</strong><span>points</span></div>
+    <section class="section tight"><div class="wrap game">
+      <div class="diplome">
+        <p class="label">Le secret de Carthage</p>
+        <h1 style="text-transform:none">${nomSecret}</h1>
+        <hr class="rule">
+        <p>${CODE.secret}</p>
+      </div>
+
+      <div class="course resultat">
+        <p class="label">🏆 Votre résultat</p>
+        <h2>${S.stamps.length} tampons, ${score()} points</h2>
+        <ul class="recap-score">
+          <li><span>Étapes validées</span><strong>${S.stamps.length} × ${POINTS.etape}</strong></li>
+          <li><span>Erreurs</span><strong>${S.erreurs - aides > 0 ? `${S.erreurs - aides} × −${POINTS.erreur}` : '0'}</strong></li>
+          <li><span>Indices révélés</span><strong>${aides ? `${aides} × −${POINTS.aide}` : '0'}</strong></li>
+          <li class="total-score"><span>Score</span><strong>${score()} points</strong></li>
+        </ul>
+        <div class="field"><label for="f-equipe">Nom de votre équipe</label>
+          <input id="f-equipe" value="${equipe}" placeholder="Ex. Les Puniques" autocomplete="off"></div>
+        <div class="qr-score">
+          <div class="qr-box"><div data-qr="${encodeURIComponent(qrScore())}"></div></div>
+          <p class="muted">Code manuel : <strong class="code-manuel">${codeScore()}</strong></p>
         </div>
-        <p class="code-verif">Code de vérification<br><strong>${codeVerif()}</strong></p>
-        <p class="cadeau">🎁 Montrez cet écran à l’équipe Door Bina. Si vous êtes le premier groupe rentré aujourd’hui, le cadeau est à vous !</p>
-        <p class="label" style="margin:0">Secret ouvert : ${nomSecret}</p>
+        <p class="cadeau">🎁 ${CODE.cadeau}</p>
+      </div>
+
+      <div class="bloc">
+        <p class="label">Retour des vélos</p>
+        <div class="map-in-card" style="margin:8px 0 0">${blocCarte()}</div>
       </div>
       <p class="center" style="margin-top:24px"><a class="btn" href="#/carnet">Voir mon passeport</a></p>
       <p class="center"><button class="btn-link" data-action="reset">Recommencer le jeu</button></p>
     </div></section>`;
   }
 
-  // Le chrono de la course avance en direct
-  setInterval(() => {
-    if (!enCourse() || !S.tFin) return;
-    document.querySelectorAll('[data-chrono]').forEach((n) => { n.textContent = chrono(Date.now() - S.tFin); });
-  }, 1000);
+  /* ---------- Espace équipe Door Bina : classement de tous les groupes ---------- */
+  const STAFF_KEY = 'doorbina:staff';
+  let staffMsg = '', staffTout = false, scanner = null;
+  function staffLoad() { try { return JSON.parse(localStorage.getItem(STAFF_KEY)) || { groupes: [] }; } catch (e) { return { groupes: [] }; } }
+  function staffSave(d) { try { localStorage.setItem(STAFF_KEY, JSON.stringify(d)); } catch (e) { /* stockage indisponible */ } }
+  function staffOuvert() { try { return sessionStorage.getItem('doorbina:staff-ok') === '1'; } catch (e) { return false; } }
+  function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+  function memeJour(t) { return new Date(t).toDateString() === new Date().toDateString(); }
+
+  function ajouterGroupe(g) {
+    if (signer(g.c, g.s) !== g.k) return '✗ Code invalide : ce score n’a pas été produit par l’app.';
+    const d = staffLoad();
+    const i = d.groupes.findIndex((x) => x.c === g.c);
+    const entree = { c: g.c, e: (g.e || 'Équipe sans nom').slice(0, 40), s: g.s, n: g.n || null, t: g.t || Date.now(), ajout: Date.now() };
+    if (i >= 0) d.groupes[i] = entree; else d.groupes.push(entree);
+    staffSave(d);
+    return `✓ ${entree.e} : ${entree.s} points ${i >= 0 ? '(mis à jour)' : 'ajouté au classement'}.`;
+  }
+  function ajouterDepuisTexte(txt) {
+    if (txt.startsWith('DOORBINA-SCORE:')) {
+      try { return ajouterGroupe(JSON.parse(txt.slice(15))); } catch (e) { return '✗ QR illisible.'; }
+    }
+    if (txt.startsWith('DOORBINA:')) return '✗ C’est le QR de réservation. Demandez le QR de score, sur l’écran final du jeu.';
+    return '✗ Ce QR code ne vient pas de Door Bina.';
+  }
+  function classement() {
+    const d = staffLoad();
+    return d.groupes
+      .filter((g) => staffTout || memeJour(g.ajout))
+      .sort((a, b) => b.s - a.s || a.t - b.t); // égalité : le premier à avoir fini passe devant
+  }
+  function chargerScanner() {
+    return new Promise((ok, ko) => {
+      if (window.Html5Qrcode) return ok();
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+      s.onload = ok; s.onerror = ko;
+      document.head.appendChild(s);
+    });
+  }
+  async function scanStop() {
+    if (!scanner) return;
+    const sc = scanner; scanner = null;
+    try { await sc.stop(); } catch (e) { /* déjà arrêté */ }
+    try { sc.clear(); } catch (e) { /* rien */ }
+  }
+  async function scanStart() {
+    try { await chargerScanner(); } catch (e) { staffMsg = '✗ Scanner indisponible hors connexion : utilisez le code manuel.'; render(); return; }
+    const box = $('#reader-box'); if (box) box.hidden = false;
+    scanner = new window.Html5Qrcode('reader');
+    try {
+      await scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 230 }, async (txt) => {
+        staffMsg = ajouterDepuisTexte(txt);
+        if (navigator.vibrate) navigator.vibrate(120);
+        await scanStop(); render();
+      });
+    } catch (e) {
+      scanner = null;
+      staffMsg = '✗ Caméra inaccessible. Autorisez la caméra ou utilisez le code manuel.';
+      render();
+    }
+  }
+
+  function vueEquipe() {
+    if (!staffOuvert()) {
+      return `
+      <div class="wrap page-head"><p class="label">Espace équipe</p><h1>Door Bina</h1></div>
+      <section class="section tight"><div class="wrap game">
+        <form id="pin-form" class="etape" novalidate>
+          <h2>Accès réservé à l’équipe</h2>
+          <div class="field"><label for="f-pin">Code PIN</label><input id="f-pin" type="password" inputmode="numeric" autocomplete="off"></div>
+          <p class="error" id="pin-err" role="alert" hidden></p>
+          <p style="margin-top:14px"><button class="btn" type="submit">Entrer</button></p>
+        </form>
+      </div></section>`;
+    }
+    const liste = classement();
+    const lignes = liste.map((g, i) => `
+      <tr class="${i === 0 ? 'premier' : ''}">
+        <td class="rang">${i === 0 ? '🎁 1' : i + 1}</td>
+        <td><strong>${esc(g.e)}</strong><br><small class="muted">${esc(g.c)}${staffTout ? ` · ${new Date(g.ajout).toLocaleDateString('fr-FR')}` : ''}</small></td>
+        <td class="pts">${g.s}</td>
+        <td><small>${g.t ? heure(g.t) : '—'}</small></td>
+        <td><button class="btn-link" data-action="staff-suppr" data-c="${esc(g.c)}" aria-label="Retirer ${esc(g.e)}">✕</button></td>
+      </tr>`).join('');
+    return `
+    <div class="wrap page-head">
+      <p class="label">Espace équipe Door Bina</p>
+      <h1>Classement</h1>
+      <p>Scannez le QR de score de chaque groupe à son retour. À la fin de la journée, le premier du classement gagne le cadeau.</p>
+    </div>
+    <section class="section tight"><div class="wrap game">
+      <div class="etape">
+        <div class="actions">
+          <button class="btn" data-action="staff-scan">📷 Scanner un QR de score</button>
+          <button class="btn-link" data-action="staff-scan-stop">Arrêter la caméra</button>
+        </div>
+        <div id="reader-box" hidden><div id="reader"></div></div>
+        ${staffMsg ? `<p class="staff-msg ${staffMsg.startsWith('✓') ? 'ok' : 'ko'}" role="status">${staffMsg}</p>` : ''}
+        <form id="saisie-form" class="bloc" novalidate>
+          <p class="label">Ou saisir le code manuel</p>
+          <div class="form-grid">
+            <div class="field"><label for="f-s-equipe">Équipe</label><input id="f-s-equipe" autocomplete="off" placeholder="Les Puniques"></div>
+            <div class="field"><label for="f-s-code">Code de score</label><input id="f-s-code" autocomplete="off" placeholder="DB-XXXX-790-XXXX" style="text-transform:uppercase"></div>
+          </div>
+          <p style="margin-top:12px"><button class="btn btn-outline" type="submit">Ajouter</button></p>
+        </form>
+      </div>
+
+      <div class="bloc">
+        <div class="classement-tete">
+          <h2>${staffTout ? 'Tous les groupes' : 'Aujourd’hui'} · ${liste.length} groupe${liste.length > 1 ? 's' : ''}</h2>
+          <button class="btn-link" data-action="staff-filtre">${staffTout ? 'Voir aujourd’hui' : 'Voir tout l’historique'}</button>
+        </div>
+        ${liste.length ? `
+          ${liste[0] ? `<p class="gagnant">🎁 En tête : <strong>${esc(liste[0].e)}</strong> avec ${liste[0].s} points</p>` : ''}
+          <table class="classement">
+            <thead><tr><th>Rang</th><th>Équipe</th><th>Points</th><th>Fin</th><th></th></tr></thead>
+            <tbody>${lignes}</tbody>
+          </table>
+          <p class="note">À égalité de points, le groupe qui a fini le jeu en premier passe devant.</p>`
+          : '<p class="muted">Aucun groupe pour le moment.</p>'}
+      </div>
+      <div class="actions" style="margin-top:24px">
+        <button class="btn-link" data-action="staff-reset">Effacer le classement</button>
+        <button class="btn-link" data-action="staff-sortir">Se déconnecter</button>
+      </div>
+      <p class="note">Le classement est enregistré sur ce téléphone. Utilisez toujours le même téléphone pour scanner les groupes.</p>
+    </div></section>`;
+  }
 
   function vueCarnet() {
     const figs = LIEUX.map((l, i) => {
@@ -1110,20 +1224,25 @@
   }
 
   /* ---------- Routage ---------- */
-  const ROUTES = { '': vueAccueil, parcours: vueParcours, carte: vueCarte, reserver: vueReserver, jeu: vueJeu, carnet: vueCarnet, lieu: vueLieu };
-  const TITRES = { '': 'Carthage à vélo', parcours: 'Le parcours', carte: 'La carte', reserver: 'Réserver', jeu: 'Le jeu', carnet: 'Mon passeport', lieu: 'Le lieu' };
+  const ROUTES = { '': vueAccueil, parcours: vueParcours, carte: vueCarte, reserver: vueReserver, jeu: vueJeu, carnet: vueCarnet, lieu: vueLieu, equipe: vueEquipe };
+  const TITRES = { '': 'Carthage à vélo', parcours: 'Le parcours', carte: 'La carte', reserver: 'Réserver', jeu: 'Le jeu', carnet: 'Mon passeport', lieu: 'Le lieu', equipe: 'Espace équipe' };
   function parts() { return location.hash.replace(/^#\/?/, '').split('/'); }
   function route() { return parts()[0] || ''; }
 
   function render(focus) {
     const r = ROUTES[route()] ? route() : '';
     stopLive();
+    scanStop();
     $('#app').innerHTML = ROUTES[r](parts()[1]);
     if ($('#live-map')) initLiveMap();
     const qr = $('#qr');
     if (qr && window.QRCode) {
       new window.QRCode(qr, { text: `DOORBINA:${qr.dataset.code}`, width: 168, height: 168, colorDark: '#611335', colorLight: '#FAF5E8' });
     }
+    document.querySelectorAll('[data-qr]').forEach((n) => {
+      if (window.QRCode) new window.QRCode(n, { text: decodeURIComponent(n.dataset.qr), width: 200, height: 200, colorDark: '#231F20', colorLight: '#FAF5E8', correctLevel: window.QRCode.CorrectLevel.M });
+      else n.textContent = 'QR indisponible hors connexion : donnez le code manuel.';
+    });
     syncAudioUI();
     document.title = `Door Bina · ${TITRES[r]}`;
     const navKey = r === 'lieu' ? 'parcours' : (r || 'home');
@@ -1150,14 +1269,6 @@
     S.stage = 'lieu'; geoMsg = ''; Live.demo = false; save();
     if (route() !== 'jeu') location.hash = '#/jeu'; else render(true);
     if (!S.ecoutes[lieu.id]) audioToggle(lieu.id);
-  }
-  function arriveeRetour() {
-    if (S.tRetour) return;
-    const champ = $('#f-equipe'); if (champ) S.equipe = champ.value.trim();
-    S.tRetour = Date.now(); geoMsg = ''; Live.demo = false;
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
-    save();
-    if (route() !== 'jeu') location.hash = '#/jeu'; else render(true);
   }
   function valider(lieu, faux, aide) {
     if (faux) S.erreurs++;
@@ -1186,17 +1297,17 @@
 
     else if (a === 'force') { if (lieu) ouvrirLieu(lieu); }
 
-    else if (a === 'retour') {
-      if (Live.pos && distance(Live.pos, RETOUR) <= RAYON_VALIDATION) { arriveeRetour(); return; }
-      el.disabled = true; el.textContent = 'Vérification de votre position…';
-      const res = await verifierPosition(RETOUR);
-      if (res.ok) { arriveeRetour(); return; }
-      const loin = res.d != null ? `Vous semblez être à ${fmtDist(res.d)} du point de retour.` : res.raison;
-      geoMsg = `${loin} Pédalez encore, le chrono tourne ! <br><button class="btn-link" data-action="retour-ok">Validation par l’équipe Door Bina sur place</button>`;
-      render();
+    else if (a === 'staff-scan') { staffMsg = ''; scanStart(); }
+    else if (a === 'staff-scan-stop') { scanStop().then(() => { const b = $('#reader-box'); if (b) b.hidden = true; }); }
+    else if (a === 'staff-filtre') { staffTout = !staffTout; render(); }
+    else if (a === 'staff-suppr') {
+      const d = staffLoad();
+      if (confirm('Retirer ce groupe du classement ?')) { d.groupes = d.groupes.filter((g) => g.c !== el.dataset.c); staffSave(d); staffMsg = ''; render(); }
     }
-
-    else if (a === 'retour-ok') { arriveeRetour(); }
+    else if (a === 'staff-reset') {
+      if (confirm('Effacer tout le classement de ce téléphone ?')) { staffSave({ groupes: [] }); staffMsg = ''; render(); }
+    }
+    else if (a === 'staff-sortir') { try { sessionStorage.removeItem('doorbina:staff-ok'); } catch (e) { /* rien */ } render(true); }
 
     else if (a === 'answer') {
       if (S.qok[lieu.id]) return; // une seule chance
@@ -1267,7 +1378,10 @@
     if (ev.target.id === 'f-souvenir') { S.souvenir = ev.target.value; save(); }
     if (ev.target.id === 'f-equipe') { S.equipe = ev.target.value; save(); }
   });
-  document.addEventListener('change', (ev) => { if (ev.target.closest('#resa-form')) majRecap(); });
+  document.addEventListener('change', (ev) => {
+    if (ev.target.closest('#resa-form')) majRecap();
+    if (ev.target.id === 'f-equipe') { S.equipe = ev.target.value.trim(); save(); render(); } // le QR reprend le nom
+  });
 
   document.addEventListener('submit', (ev) => {
     const f = ev.target;
@@ -1305,6 +1419,22 @@
       if (!v) { const e = $('#lettre-err'); e.hidden = false; e.textContent = 'Saisissez la lettre trouvée.'; return; }
       // une seule chance : si la lettre est fausse, −10 points et la bonne lettre est donnée
       valider(lieu, v !== lieu.lettre);
+    }
+    if (f.id === 'pin-form') {
+      ev.preventDefault();
+      if (($('#f-pin').value || '').trim() === String(STAFF.pin)) {
+        try { sessionStorage.setItem('doorbina:staff-ok', '1'); } catch (e) { /* rien */ }
+        staffMsg = ''; render(true);
+      } else { const e = $('#pin-err'); e.hidden = false; e.textContent = 'Code PIN incorrect.'; }
+    }
+    if (f.id === 'saisie-form') {
+      ev.preventDefault();
+      const code = ($('#f-s-code').value || '').trim().toUpperCase();
+      const m = code.match(/^(DB-[A-Z2-9]{4})-(\d{1,4})-([0-9A-Z]{4})$/);
+      staffMsg = m
+        ? ajouterGroupe({ c: m[1], s: +m[2], k: m[3], e: ($('#f-s-equipe').value || '').trim(), t: Date.now() })
+        : '✗ Format attendu : DB-XXXX-points-XXXX (ex. DB-K7QM-790-AB12).';
+      render();
     }
     if (f.id === 'final-form') {
       ev.preventDefault();

@@ -448,6 +448,28 @@ fieldset.field { border: 0; padding: 0; margin: 0; min-width: 0; }
 .galerie-item b { color: var(--ocre); margin-right: 4px; }
 .galerie-item small { display: block; font: 600 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; opacity: .85; margin-top: 4px; }
 
+/* ---------- Résultat final et espace équipe ---------- */
+.lien-equipe { color: inherit; opacity: .7; }
+.recap-score { list-style: none; padding: 0; margin: 10px 0 18px; font-size: 16px; }
+.recap-score li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--trait); }
+.recap-score .total-score { border-bottom: 0; font-size: 18px; color: var(--pourpre); }
+.qr-score { text-align: center; margin: 18px 0 8px; }
+.qr-score .qr-box { border: 2px solid var(--pourpre); }
+.code-manuel { font-size: 18px; letter-spacing: .08em; color: var(--pourpre); }
+.staff-msg { margin: 14px 0 0; padding: 12px 14px; border-radius: var(--radius); font-weight: 600; }
+.staff-msg.ok { background: #dfe9d8; color: #2f5a23; }
+.staff-msg.ko { background: #f1d9d9; color: #8c1d1d; }
+#reader-box { margin-top: 14px; max-width: 420px; }
+#reader { width: 100%; border-radius: var(--radius); overflow: hidden; }
+.classement-tete { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.gagnant { background: var(--ocre); color: var(--noir); padding: 12px 16px; border-radius: var(--radius); font-size: 17px; }
+.classement { width: 100%; border-collapse: collapse; margin-top: 12px; background: var(--ivoire); font-size: 15px; }
+.classement th { text-align: left; font: 700 11px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--pierre); background: var(--pourpre); padding: 10px 8px; }
+.classement td { padding: 10px 8px; border-bottom: 1px solid var(--trait); vertical-align: middle; }
+.classement .rang { font: 600 22px var(--serif); color: var(--pourpre); white-space: nowrap; }
+.classement .pts { font: 600 22px var(--serif); }
+.classement tr.premier td { background: #f6e3c9; }
+
 /* ---------- Course au cadeau et ticket d'arrivée ---------- */
 .course { margin-top: 18px; background: var(--ivoire); border-top: 4px solid var(--ocre); padding: 24px 22px; }
 .course h2 { margin-bottom: 8px; }
