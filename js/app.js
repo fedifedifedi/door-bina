@@ -27,7 +27,7 @@
   const VITESSE_VELO = 12; // km/h
   const ROMAINS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
   const VELOS = { confort: 'Vélo confort', electrique: 'Vélo électrique' };
-  const LANGUES = { fr: 'Français', en: 'English', ar: 'العربية' };
+  const LANGUES = { fr: 'Français', en: 'English', ar: 'العربية', tn: 'تونسي (دارجة)' };
   const FORMULES = {
     journee: 'Journée complète · 8 lieux',
     demi: 'Demi-journée · rythme soutenu',
@@ -282,32 +282,41 @@
   }
   /* Langue de l'audioguide : celle choisie dans le lecteur, sinon celle de la réservation */
   const TRAD = window.DOORBINA_AUDIO || {};
-  const LANG_TTS = { fr: 'fr-FR', en: 'en-GB', ar: 'ar-TN' };
-  const LANG_COURT = { fr: 'FR', en: 'EN', ar: 'عربي' };
+  // tn = derja tunisienne (dialecte), lue par les voix tunisiennes
+  const LANG_TTS = { fr: 'fr-FR', en: 'en-GB', ar: 'ar-TN', tn: 'ar-TN' };
+  const LANG_COURT = { fr: 'FR', en: 'EN', ar: 'عربي', tn: 'تونسي' };
+  const LANG_HTML = { fr: 'fr', en: 'en', ar: 'ar', tn: 'ar-TN' };
+  const arabe = (lg) => lg === 'ar' || lg === 'tn';
+  // Les deux voix tunisiennes des versions arabes enregistrées
+  const VOIX_AR = { h: 'هادي · homme', f: 'ريم · femme' };
+  const genreVoix = () => (S.genreVoix === 'f' ? 'f' : 'h');
   function langueAudio() {
     const lg = S.langueAudio || (S.reservation && S.reservation.langue) || 'fr';
     return LANGUES[lg] ? lg : 'fr';
   }
-  /** Nom et récit d'un lieu dans une langue (le français sert de secours) */
+  /** Nom et récit d'un lieu dans une langue (le français sert de secours).
+      « lecture » : texte vocalisé destiné à la voix (arabe), différent du texte affiché. */
   function texte(x, lg = langueAudio()) {
     const t = TRAD[lg] && TRAD[lg][x.id];
-    return t ? { nom: t.nom, recit: t.recit, lg } : { nom: x.nom, recit: x.recit, lg: 'fr' };
+    return t ? { nom: t.nom, recit: t.recit, lecture: t.lecture, lg } : { nom: x.nom, recit: x.recit, lg: 'fr' };
   }
-  /** Fichier MP3 enregistré pour cette langue : indiqué dans le lieu, sinon audio/<langue>/<id>.mp3 */
+  /** Fichier MP3 enregistré : indiqué dans le lieu, sinon audio/<langue>/<id>.mp3
+      (voix de femme en arabe : audio/<langue>/<id>-f.mp3) */
   const MP3 = window.DOORBINA_MP3;
   const mp3Absents = new Set(); // fichiers introuvables : on passe à la voix du téléphone
   function fichierAudio(x, lg) {
     let f = null;
     if (x.audio && typeof x.audio === 'object') f = x.audio[lg] || null;
     else if (x.audio && lg === 'fr') f = x.audio;
-    else if (MP3) f = `${MP3}/${lg}/${x.id}.mp3`;
+    else if (MP3) f = `${MP3}/${lg}/${x.id}${arabe(lg) && genreVoix() === 'f' ? '-f' : ''}.mp3`;
     return f && !mp3Absents.has(f) ? f : null;
   }
   function dureeRecit(x) { return Math.max(1, Math.round(texte(x).recit.split(/\s+/).length / 150)); }
   function lecteur(x, compact) {
     const ecoute = S.ecoutes[x.id];
     const lg = langueAudio(), t = texte(x, lg);
-    const dir = lg === 'ar' ? ' dir="rtl"' : '';
+    const dir = arabe(t.lg) ? ' dir="rtl"' : '';
+    const mp3 = fichierAudio(x, lg);
     return `<div class="audio${compact ? ' compact' : ''}" data-id="${x.id}" data-state="idle">
       <button class="audio-btn" data-action="audio" data-id="${x.id}" aria-label="Écouter le récit : ${x.nom}">
         <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
@@ -322,14 +331,17 @@
     </div>
     <div class="audio-opts">
       <div class="audio-langs" role="group" aria-label="Langue de l’audio">
-        ${Object.keys(LANGUES).map((k) => `<button type="button" class="${k === lg ? 'on' : ''}" data-action="audio-lang" data-lg="${k}" aria-pressed="${k === lg}" lang="${k}">${LANG_COURT[k]}</button>`).join('')}
+        ${Object.keys(LANGUES).map((k) => `<button type="button" class="${k === lg ? 'on' : ''}" data-action="audio-lang" data-lg="${k}" aria-pressed="${k === lg}" lang="${LANG_HTML[k]}">${LANG_COURT[k]}</button>`).join('')}
       </div>
-      ${fichierAudio(x, lg) ? '' : TTS && !compact ? `<label class="audio-voix-l">Voix <select class="audio-voix" data-lg="${lg}" aria-label="Choisir la voix"></select></label>` : ''}
+      ${mp3 && arabe(lg) ? `<div class="audio-langs audio-genre" role="group" aria-label="Voix">
+        ${Object.keys(VOIX_AR).map((g) => `<button type="button" class="${g === genreVoix() ? 'on' : ''}" data-action="audio-genre" data-g="${g}" aria-pressed="${g === genreVoix()}">${VOIX_AR[g]}</button>`).join('')}
+      </div>` : ''}
+      ${mp3 ? '' : TTS && !compact ? `<label class="audio-voix-l">Voix <select class="audio-voix" data-lg="${lg}" aria-label="Choisir la voix"></select></label>` : ''}
     </div>
     <p class="audio-msg" hidden></p>
     ${compact ? '' : `<details class="transcript"${TTS || x.audio ? '' : ' open'}>
       <summary>Lire le texte</summary>
-      <p lang="${t.lg}"${dir}>${t.recit}</p>
+      <p lang="${LANG_HTML[t.lg]}"${dir}>${t.recit}</p>
       ${ecoute ? '' : `<button class="btn-link" data-action="lu" data-id="${x.id}">J’ai lu le texte en entier</button>`}
     </details>`}`;
   }
@@ -338,7 +350,7 @@
      ou celle que le visiteur a choisie dans le menu « Voix ». */
   function voixDe(lg) {
     if (!TTS) return [];
-    const pref = { fr: /^fr/i, en: /^en/i, ar: /^ar/i }[lg];
+    const pref = { fr: /^fr/i, en: /^en/i, ar: /^ar/i, tn: /^ar/i }[lg];
     return speechSynthesis.getVoices().filter((v) => pref.test(v.lang));
   }
   function noteVoix(v, lg) {
@@ -347,8 +359,8 @@
     if (/google/i.test(v.name)) n += 2;
     if (v.lang.replace('_', '-').toLowerCase() === LANG_TTS[lg].toLowerCase()) n += 1;
     if (lg === 'en' && /en-US/i.test(v.lang)) n += 0.5;
-    if (lg === 'ar' && /ar-TN/i.test(v.lang)) n += 1.5; // accent tunisien en priorité
-    else if (lg === 'ar' && /ar-(SA|EG)/i.test(v.lang)) n += 0.5;
+    if (arabe(lg) && /ar-TN/i.test(v.lang)) n += 1.5; // accent tunisien en priorité
+    else if (arabe(lg) && /ar-(SA|EG)/i.test(v.lang)) n += 0.5;
     if (v.localService) n += 0.2;
     return n;
   }
@@ -423,12 +435,13 @@
     if (!voix && speechSynthesis.getVoices().length) {
       const id = x.id;
       audioStop();
-      messageAudio(id, `Aucune voix ${{ fr: 'française', en: 'anglaise', ar: 'arabe' }[t.lg]} n’est installée sur ce téléphone. Lisez le texte ci-dessous, ou ajoutez la voix dans les réglages du téléphone (Synthèse vocale).`);
+      messageAudio(id, `Aucune voix ${{ fr: 'française', en: 'anglaise', ar: 'arabe', tn: 'arabe' }[t.lg]} n’est installée sur ce téléphone. Lisez le texte ci-dessous, ou ajoutez la voix dans les réglages du téléphone (Synthèse vocale).`);
       return;
     }
     messageAudio(x.id, '');
     const tok = ++Voix.token;
-    Voix.chunks = (`${t.nom}. ${t.recit}`).match(/[^.!?…؟]+[.!?…؟]+|[^.!?…؟]+$/g) || [t.recit];
+    const aLire = t.lecture || `${t.nom}. ${t.recit}`; // texte vocalisé s'il existe : meilleure prononciation
+    Voix.chunks = aLire.match(/[^.!?…؟]+[.!?…؟]+|[^.!?…؟]+$/g) || [aLire];
     Voix.i = 0; Voix.state = 'playing';
     const suivant = () => {
       if (tok !== Voix.token) return;
@@ -1524,6 +1537,7 @@
     else if (a === 'avatar-reset') { S.avatar = null; Live.me = null; save(); render(true); }
     else if (a === 'audio') { audioToggle(+el.dataset.id); }
     else if (a === 'audio-lang') { audioStop(); S.langueAudio = el.dataset.lg; save(); render(); }
+    else if (a === 'audio-genre') { audioStop(); S.genreVoix = el.dataset.g; save(); render(); }
     else if (a === 'audio-stop') { audioStop(); }
 
     else if (a === 'center') {
