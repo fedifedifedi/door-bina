@@ -279,6 +279,11 @@
      Clé = id du lieu (99 = pause thé). Pour un vrai enregistrement, indiquez dans le lieu
      « audio: { fr: 'audio/1-fr.mp3', en: 'audio/1-en.mp3', ar: 'audio/1-ar.mp3' } ».
      Traductions à faire relire avant le lancement. */
+  /* Audioguides enregistrés : audio/<langue>/<id>.mp3 (ex. audio/ar/1.mp3).
+     Voix neuronales : Henri (fr), Ryan (en), Hédi (ar, Tunisie). Si un fichier manque,
+     l'app lit le texte avec la voix du téléphone. Mettez null pour toujours utiliser le téléphone. */
+  window.DOORBINA_MP3 = 'audio';
+
   window.DOORBINA_AUDIO = {
     en: {
       1: { nom: 'Dar El Hout', recit: 'Welcome to Dar El Hout, the starting point of your adventure. In Tunisian Arabic, Dar El Hout means “the house of the fish”. Here, on the shore of the gulf, an oceanographic station was founded in 1924 to study the sea. Researchers still work here today on fish, currents and fishing, and the museum displays aquariums and marine collections. Starting here is no accident: Carthage was born from the sea. Its founders were sailors from Tyre, and all its wealth arrived by ship. Explore the museum: this stage’s clue is hidden inside. Then head for Byrsa Hill, one and a half kilometres away.' },

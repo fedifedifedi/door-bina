@@ -293,11 +293,15 @@
     const t = TRAD[lg] && TRAD[lg][x.id];
     return t ? { nom: t.nom, recit: t.recit, lg } : { nom: x.nom, recit: x.recit, lg: 'fr' };
   }
-  /** Fichier MP3 enregistré pour cette langue, s'il existe */
+  /** Fichier MP3 enregistré pour cette langue : indiqué dans le lieu, sinon audio/<langue>/<id>.mp3 */
+  const MP3 = window.DOORBINA_MP3;
+  const mp3Absents = new Set(); // fichiers introuvables : on passe à la voix du téléphone
   function fichierAudio(x, lg) {
-    if (!x.audio) return null;
-    if (typeof x.audio === 'string') return lg === 'fr' ? x.audio : null;
-    return x.audio[lg] || null;
+    let f = null;
+    if (x.audio && typeof x.audio === 'object') f = x.audio[lg] || null;
+    else if (x.audio && lg === 'fr') f = x.audio;
+    else if (MP3) f = `${MP3}/${lg}/${x.id}.mp3`;
+    return f && !mp3Absents.has(f) ? f : null;
   }
   function dureeRecit(x) { return Math.max(1, Math.round(texte(x).recit.split(/\s+/).length / 150)); }
   function lecteur(x, compact) {
@@ -320,7 +324,7 @@
       <div class="audio-langs" role="group" aria-label="Langue de l’audio">
         ${Object.keys(LANGUES).map((k) => `<button type="button" class="${k === lg ? 'on' : ''}" data-action="audio-lang" data-lg="${k}" aria-pressed="${k === lg}" lang="${k}">${LANG_COURT[k]}</button>`).join('')}
       </div>
-      ${TTS && !compact ? `<label class="audio-voix-l">Voix <select class="audio-voix" data-lg="${lg}" aria-label="Choisir la voix"></select></label>` : ''}
+      ${fichierAudio(x, lg) ? '' : TTS && !compact ? `<label class="audio-voix-l">Voix <select class="audio-voix" data-lg="${lg}" aria-label="Choisir la voix"></select></label>` : ''}
     </div>
     <p class="audio-msg" hidden></p>
     ${compact ? '' : `<details class="transcript"${TTS || x.audio ? '' : ' open'}>
@@ -458,7 +462,10 @@
       Voix.el = a; Voix.state = 'playing';
       a.ontimeupdate = syncAudioUI;
       a.onended = () => audioFini(id);
-      a.play().catch(() => { Voix.el = null; parler(x); });
+      // Fichier introuvable ou illisible : la voix du téléphone prend le relais
+      const secours = () => { if (Voix.el !== a) return; mp3Absents.add(mp3); Voix.el = null; parler(x); };
+      a.onerror = secours;
+      a.play().catch((e) => { if (e && e.name === 'NotAllowedError') { Voix.el = null; Voix.state = 'idle'; syncAudioUI(); } else secours(); });
       syncAudioUI();
       return;
     }
