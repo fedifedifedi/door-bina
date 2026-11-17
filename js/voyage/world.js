@@ -59,11 +59,39 @@ const olivier = (x, z) => [part.cyl(0.12, 0.16, 1.2, 5, '#6b4a30', x, 0, z), par
 const buisson = (x, y, z, r = 0.6, c = C.rose) => part.geo(new THREE.IcosahedronGeometry(r, 0), c, x, y, z);
 const banc = (x, z, ry = 0) => [part.box(1.6, 0.12, 0.5, '#8a5a3c', x, 0.45, z, new THREE.Euler(0, ry, 0)), part.box(1.5, 0.45, 0.4, '#5a4a40', x, 0, z, new THREE.Euler(0, ry, 0))];
 
-/** Drapeau animé (pivote au mât) */
-function drapeau(color, w = 1.3, h = 0.8) {
+/** Drapeau tunisien dessiné : fond rouge, disque blanc, croissant et étoile rouges */
+function textureTunisie() {
+  return canvasTexture(600, 400, (ctx, w, h) => {
+    const rouge = '#E70013';
+    ctx.fillStyle = rouge;
+    ctx.fillRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2, R = h / 4; // disque blanc : diamètre = moitié de la hauteur
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+    // croissant : un disque rouge, entamé par un disque blanc décalé vers la droite
+    ctx.fillStyle = rouge;
+    ctx.beginPath(); ctx.arc(cx, cy, R * 0.75, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(cx + R * 0.19, cy, R * 0.6, 0, Math.PI * 2); ctx.fill();
+    // étoile à cinq branches, dans l'ouverture du croissant
+    const sx = cx + R * 0.23, sy = cy, ro = R * 0.45, ri = ro * 0.382;
+    ctx.fillStyle = rouge;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 ? ri : ro;
+      const a = Math.PI + (i * Math.PI) / 5; // une pointe tournée vers le croissant
+      ctx.lineTo(sx + Math.cos(a) * r, sy + Math.sin(a) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+  });
+}
+
+/** Drapeau animé (pivote au mât) : une couleur unie, ou une image (map) */
+function drapeau(color, w = 1.3, h = 0.8, map = null) {
   const g = new THREE.Group();
   const mat = flatMat({ color: '#d8d4cc' });
-  const mat2 = flatMat({ color, side: THREE.DoubleSide });
+  const mat2 = map ? new THREE.MeshLambertMaterial({ map, side: THREE.DoubleSide }) : flatMat({ color, side: THREE.DoubleSide });
   const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 5, 5).translate(0, 2.5, 0), mat);
   const cloth = new THREE.Mesh(new THREE.PlaneGeometry(w, h, 6, 1).translate(w / 2, 0, 0), mat2);
   cloth.position.y = 4.5;
@@ -102,8 +130,9 @@ const MONUMENTS = {
     }
     p.push(part.cyl(0.35, 0.28, 0.6, 7, '#b4532a', -4.6, 0, 3.6), buisson(-4.6, 0.95, 3.6, 0.5, C.feuille));
     p.push(part.cyl(0.35, 0.28, 0.6, 7, '#b4532a', 4.6, 0, 3.6), buisson(4.6, 0.95, 3.6, 0.5, C.rose));
-    const fl = drapeau(C.pourpre);
+    const fl = drapeau('#E70013', 1.8, 1.2, textureTunisie()); // drapeau tunisien
     fl.g.position.set(-5, 0, 1);
+    fl.g.scale.setScalar(1.2);
     return { geo: mergeColored(p), dist: 8.8, plaza: [14, 11], extras: [fl.g], update: (t) => fl.update(t) };
   },
 
