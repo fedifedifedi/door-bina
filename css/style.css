@@ -359,6 +359,21 @@ p { margin: 0 0 1em; }
 .audio-stop { flex: none; background: none; border: 1px solid rgba(246,236,209,.4); color: var(--pierre); border-radius: var(--radius); width: 40px; height: 40px; cursor: pointer; display: grid; place-items: center; }
 .audio-stop svg { width: 16px; height: 16px; fill: currentColor; }
 .audio[data-state="idle"] .audio-stop { visibility: hidden; }
+/* Langue et voix de l'audioguide */
+.audio-opts { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin-top: 8px; }
+.audio-langs { display: inline-flex; border: 1px solid var(--trait); border-radius: 999px; overflow: hidden; }
+.audio-langs button {
+  font: 700 13px/1 var(--sans); padding: 8px 14px; min-height: 36px; border: 0; cursor: pointer;
+  background: var(--ivoire); color: var(--pourpre);
+}
+.audio-langs button + button { border-left: 1px solid var(--trait); }
+.audio-langs button.on { background: var(--pourpre); color: var(--pierre); }
+.audio-langs button[lang="ar"] { font-family: var(--arabe); font-size: 15px; }
+.audio-voix-l { display: inline-flex; align-items: center; gap: 6px; font: 600 13px/1 var(--sans); color: var(--gris); }
+.audio-voix { font: 400 14px var(--sans); max-width: 220px; padding: 6px 8px; border: 1px solid var(--trait); border-radius: var(--radius); background: var(--ivoire); }
+.audio-msg { margin: 8px 0 0; font-size: 14px; padding: 10px 12px; border-left: 3px solid var(--ocre); background: rgba(202,130,60,.12); }
+.audio-msg[hidden] { display: none; }
+.transcript p[dir="rtl"] { font-family: var(--arabe); font-size: 20px; line-height: 1.8; }
 .audio.compact { padding: 8px 10px; gap: 10px; }
 .audio.compact .audio-btn { width: 42px; height: 42px; }
 .audio.compact .audio-meta strong { font-size: 15px; }

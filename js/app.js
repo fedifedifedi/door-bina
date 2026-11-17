@@ -280,9 +280,30 @@
     const i = LIEUX.findIndex((x) => x.id === id);
     return i < S.stamps.length || (i === S.stamps.length && S.stage === 'lieu');
   }
-  function dureeRecit(x) { return Math.max(1, Math.round(x.recit.split(/\s+/).length / 150)); }
+  /* Langue de l'audioguide : celle choisie dans le lecteur, sinon celle de la réservation */
+  const TRAD = window.DOORBINA_AUDIO || {};
+  const LANG_TTS = { fr: 'fr-FR', en: 'en-GB', ar: 'ar-TN' };
+  const LANG_COURT = { fr: 'FR', en: 'EN', ar: 'عربي' };
+  function langueAudio() {
+    const lg = S.langueAudio || (S.reservation && S.reservation.langue) || 'fr';
+    return LANGUES[lg] ? lg : 'fr';
+  }
+  /** Nom et récit d'un lieu dans une langue (le français sert de secours) */
+  function texte(x, lg = langueAudio()) {
+    const t = TRAD[lg] && TRAD[lg][x.id];
+    return t ? { nom: t.nom, recit: t.recit, lg } : { nom: x.nom, recit: x.recit, lg: 'fr' };
+  }
+  /** Fichier MP3 enregistré pour cette langue, s'il existe */
+  function fichierAudio(x, lg) {
+    if (!x.audio) return null;
+    if (typeof x.audio === 'string') return lg === 'fr' ? x.audio : null;
+    return x.audio[lg] || null;
+  }
+  function dureeRecit(x) { return Math.max(1, Math.round(texte(x).recit.split(/\s+/).length / 150)); }
   function lecteur(x, compact) {
     const ecoute = S.ecoutes[x.id];
+    const lg = langueAudio(), t = texte(x, lg);
+    const dir = lg === 'ar' ? ' dir="rtl"' : '';
     return `<div class="audio${compact ? ' compact' : ''}" data-id="${x.id}" data-state="idle">
       <button class="audio-btn" data-action="audio" data-id="${x.id}" aria-label="Écouter le récit : ${x.nom}">
         <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
@@ -290,21 +311,59 @@
       </button>
       <div class="audio-meta">
         <strong>${compact ? x.nom : 'Écouter le lieu'}${ecoute ? ' <span class="ok">✓</span>' : ''}</strong>
-        <span class="audio-status">≈ ${dureeRecit(x)} min · Français</span>
+        <span class="audio-status">≈ ${dureeRecit(x)} min · ${LANGUES[lg]}</span>
         <div class="audio-bar"><i></i></div>
       </div>
       <button class="audio-stop" data-action="audio-stop" aria-label="Arrêter l’audio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/></svg></button>
     </div>
+    <div class="audio-opts">
+      <div class="audio-langs" role="group" aria-label="Langue de l’audio">
+        ${Object.keys(LANGUES).map((k) => `<button type="button" class="${k === lg ? 'on' : ''}" data-action="audio-lang" data-lg="${k}" aria-pressed="${k === lg}" lang="${k}">${LANG_COURT[k]}</button>`).join('')}
+      </div>
+      ${TTS && !compact ? `<label class="audio-voix-l">Voix <select class="audio-voix" data-lg="${lg}" aria-label="Choisir la voix"></select></label>` : ''}
+    </div>
+    <p class="audio-msg" hidden></p>
     ${compact ? '' : `<details class="transcript"${TTS || x.audio ? '' : ' open'}>
       <summary>Lire le texte</summary>
-      <p>${x.recit}</p>
+      <p lang="${t.lg}"${dir}>${t.recit}</p>
       ${ecoute ? '' : `<button class="btn-link" data-action="lu" data-id="${x.id}">J’ai lu le texte en entier</button>`}
     </details>`}`;
   }
-  function voixFr() {
-    if (!TTS) return null;
-    const v = speechSynthesis.getVoices().filter((x) => /^fr/i.test(x.lang));
-    return v.find((x) => /fr-FR/i.test(x.lang) && /natural|neural|google|online/i.test(x.name)) || v.find((x) => /fr-FR/i.test(x.lang)) || v[0] || null;
+  /* ---------- Voix de synthèse ----------
+     Le téléphone fournit les voix. On prend la plus naturelle pour la langue,
+     ou celle que le visiteur a choisie dans le menu « Voix ». */
+  function voixDe(lg) {
+    if (!TTS) return [];
+    const pref = { fr: /^fr/i, en: /^en/i, ar: /^ar/i }[lg];
+    return speechSynthesis.getVoices().filter((v) => pref.test(v.lang));
+  }
+  function noteVoix(v, lg) {
+    let n = 0;
+    if (/natural|neural|online|premium|enhanced|wavenet/i.test(v.name)) n += 4; // voix « naturelles », plus claires
+    if (/google/i.test(v.name)) n += 2;
+    if (v.lang.replace('_', '-').toLowerCase() === LANG_TTS[lg].toLowerCase()) n += 1;
+    if (lg === 'en' && /en-US/i.test(v.lang)) n += 0.5;
+    if (lg === 'ar' && /ar-TN/i.test(v.lang)) n += 1.5; // accent tunisien en priorité
+    else if (lg === 'ar' && /ar-(SA|EG)/i.test(v.lang)) n += 0.5;
+    if (v.localService) n += 0.2;
+    return n;
+  }
+  function voixPour(lg) {
+    const liste = voixDe(lg);
+    if (!liste.length) return null;
+    const choisie = S.voix && S.voix[lg] && liste.find((v) => v.voiceURI === S.voix[lg]);
+    return choisie || liste.slice().sort((a, b) => noteVoix(b, lg) - noteVoix(a, lg))[0];
+  }
+  /** Remplit les menus « Voix » avec les voix de la langue choisie */
+  function remplirVoix() {
+    document.querySelectorAll('.audio-voix').forEach((sel) => {
+      const lg = sel.dataset.lg, liste = voixDe(lg), cur = voixPour(lg);
+      sel.innerHTML = liste.length
+        ? liste.slice().sort((a, b) => noteVoix(b, lg) - noteVoix(a, lg))
+          .map((v) => `<option value="${esc(v.voiceURI)}"${cur && v.voiceURI === cur.voiceURI ? ' selected' : ''}>${esc(v.name.replace(/^Microsoft |^Google /, '').replace(/ Online \(Natural\)/, '').replace(/ Multilingual/, ''))}</option>`).join('')
+        : '<option value="">Aucune voix sur cet appareil</option>';
+      sel.disabled = !liste.length;
+    });
   }
   function audioProgres() {
     if (Voix.el && Voix.el.duration) return Voix.el.currentTime / Voix.el.duration;
@@ -317,7 +376,7 @@
       box.dataset.state = st;
       const x = trouver(+box.dataset.id);
       const s = box.querySelector('.audio-status');
-      if (s) s.textContent = st === 'playing' ? 'Lecture en cours…' : st === 'paused' ? 'En pause' : `≈ ${dureeRecit(x)} min · Français`;
+      if (s) s.textContent = st === 'playing' ? 'Lecture en cours…' : st === 'paused' ? 'En pause' : `≈ ${dureeRecit(x)} min · ${LANGUES[langueAudio()]}`;
       const bar = box.querySelector('.audio-bar i');
       if (bar) bar.style.width = actif ? Math.round(audioProgres() * 100) + '%' : (S.ecoutes[x.id] ? '100%' : '0%');
     });
@@ -340,17 +399,41 @@
     if (neuve && route() === 'jeu' && S.stage === 'lieu') render(); // débloque la question
     else syncAudioUI();
   }
+  /** Message sous le lecteur (ex. : pas de voix arabe sur ce téléphone) */
+  function messageAudio(id, html) {
+    document.querySelectorAll(`.audio[data-id="${id}"]`).forEach((box) => {
+      // ordre dans le lecteur : .audio, .audio-opts, .audio-msg, .transcript
+      const m = box.nextElementSibling && box.nextElementSibling.nextElementSibling;
+      if (!m || !m.classList.contains('audio-msg')) return;
+      m.innerHTML = html;
+      m.hidden = !html;
+      const tr = m.nextElementSibling;
+      if (tr && tr.classList.contains('transcript') && html) tr.open = true;
+    });
+  }
   function parler(x) {
     if (!TTS) { alert('La lecture audio n’est pas disponible sur ce navigateur : touchez « Lire le texte ».'); audioStop(); return; }
+    const lg = langueAudio(), t = texte(x, lg);
+    const voix = voixPour(t.lg);
+    // Sans voix de cette langue, le téléphone lirait le texte avec un accent faux : on l'explique plutôt
+    if (!voix && speechSynthesis.getVoices().length) {
+      const id = x.id;
+      audioStop();
+      messageAudio(id, `Aucune voix ${{ fr: 'française', en: 'anglaise', ar: 'arabe' }[t.lg]} n’est installée sur ce téléphone. Lisez le texte ci-dessous, ou ajoutez la voix dans les réglages du téléphone (Synthèse vocale).`);
+      return;
+    }
+    messageAudio(x.id, '');
     const tok = ++Voix.token;
-    Voix.chunks = (`${x.nom}. ${x.recit}`).match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) || [x.recit];
+    Voix.chunks = (`${t.nom}. ${t.recit}`).match(/[^.!?…؟]+[.!?…؟]+|[^.!?…؟]+$/g) || [t.recit];
     Voix.i = 0; Voix.state = 'playing';
     const suivant = () => {
       if (tok !== Voix.token) return;
       if (Voix.i >= Voix.chunks.length) { audioFini(x.id); return; }
       const u = new SpeechSynthesisUtterance(Voix.chunks[Voix.i].trim());
-      u.lang = 'fr-FR'; u.rate = 0.95;
-      const v = voixFr(); if (v) u.voice = v;
+      u.lang = voix ? voix.lang : LANG_TTS[t.lg];
+      u.rate = t.lg === 'ar' ? 0.88 : 0.92; // un peu plus lent : plus clair dehors, avec le vent
+      u.pitch = 1;
+      if (voix) u.voice = voix;
       u.onend = () => { if (tok !== Voix.token) return; Voix.i++; syncAudioUI(); suivant(); };
       speechSynthesis.speak(u);
     };
@@ -369,8 +452,9 @@
     }
     audioStop();
     Voix.id = id;
-    if (x.audio) {
-      const a = new Audio(x.audio);
+    const mp3 = fichierAudio(x, langueAudio());
+    if (mp3) {
+      const a = new Audio(mp3);
       Voix.el = a; Voix.state = 'playing';
       a.ontimeupdate = syncAudioUI;
       a.onended = () => audioFini(id);
@@ -380,7 +464,11 @@
     }
     parler(x);
   }
-  if (TTS) speechSynthesis.getVoices();
+  if (TTS) {
+    speechSynthesis.getVoices();
+    // Les voix arrivent parfois après le chargement de la page
+    speechSynthesis.addEventListener('voiceschanged', remplirVoix);
+  }
 
   /* ---------- Carte en direct (Leaflet + GPS) ---------- */
   const Live = { map: null, watch: null, me: null, acc: null, line: null, pos: null,
@@ -817,7 +905,7 @@
           <div class="qr-box"><div id="qr" data-code="${r.code}"></div></div>
           <span class="code">${r.code}</span>
           <p>${r.nom ? `Merci ${r.nom}. ` : ''}À Tunis, scannez ce QR code au point de départ pour débloquer vos vélos, puis fixez le téléphone sur son support.</p>
-          ${r.langue && r.langue !== 'fr' ? '<p class="muted" style="color:rgba(246,236,209,.8)">Audioguides en anglais et en arabe : bientôt disponibles. Le français est utilisé en attendant.</p>' : ''}
+          ${r.langue && r.langue !== 'fr' ? `<p class="muted" style="color:rgba(246,236,209,.8)">Audioguide : ${LANGUES[r.langue]}. Vous pourrez changer de langue et de voix dans le lecteur.</p>` : ''}
           ${details}
           <a class="btn btn-ocre" href="#/jeu">Commencer le jeu</a>
         </div>
@@ -1312,6 +1400,7 @@
       else n.textContent = 'QR indisponible hors connexion : donnez le code manuel.';
     });
     syncAudioUI();
+    remplirVoix();
     majRail();
     document.title = `Door Bina · ${TITRES[r]}`;
     const navKey = r === 'lieu' ? 'parcours' : (r || 'home');
@@ -1427,6 +1516,7 @@
     else if (a === 'avatar') { S.avatar = el.dataset.v; save(); render(true); }
     else if (a === 'avatar-reset') { S.avatar = null; Live.me = null; save(); render(true); }
     else if (a === 'audio') { audioToggle(+el.dataset.id); }
+    else if (a === 'audio-lang') { audioStop(); S.langueAudio = el.dataset.lg; save(); render(); }
     else if (a === 'audio-stop') { audioStop(); }
 
     else if (a === 'center') {
@@ -1448,6 +1538,10 @@
     if (ev.target.id === 'f-equipe') { S.equipe = ev.target.value; save(); }
   });
   document.addEventListener('change', (ev) => {
+    if (ev.target.matches('.audio-voix')) { // voix choisie par le visiteur, gardée pour cette langue
+      S.voix = Object.assign({}, S.voix, { [ev.target.dataset.lg]: ev.target.value });
+      save(); audioStop();
+    }
     if (ev.target.closest('#resa-form')) majRecap();
     if (ev.target.id === 'f-equipe') { S.equipe = ev.target.value.trim(); save(); render(); } // le QR reprend le nom
   });
@@ -1469,6 +1563,7 @@
         formule: d.formule, langue: d.langue,
         nom: d.nom.trim(), tel: d.tel.trim(), total: prix(d), creeLe: Date.now()
       };
+      S.langueAudio = null; // l'audioguide suit la langue de cette nouvelle réservation
       S.avatar = d.avatar || 'homme';
       S.stamps = []; S.stage = 'start';
       save(); render(true);
