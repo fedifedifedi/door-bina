@@ -287,8 +287,13 @@
   const LANG_COURT = { fr: 'FR', en: 'EN', ar: 'عربي', tn: 'تونسي' };
   const LANG_HTML = { fr: 'fr', en: 'en', ar: 'ar', tn: 'ar-TN' };
   const arabe = (lg) => lg === 'ar' || lg === 'tn';
-  // Les deux voix tunisiennes des versions arabes enregistrées
-  const VOIX_AR = { h: 'هادي · homme', f: 'ريم · femme' };
+  // Les deux voix enregistrées de chaque langue (h : homme, f : femme)
+  const VOIX_MP3 = {
+    fr: { h: 'Henri · homme', f: 'Denise · femme' },
+    en: { h: 'Ryan · man', f: 'Sonia · woman' },
+    ar: { h: 'هادي · homme', f: 'ريم · femme' },
+    tn: { h: 'هادي · homme', f: 'ريم · femme' },
+  };
   const genreVoix = () => (S.genreVoix === 'f' ? 'f' : 'h');
   function langueAudio() {
     const lg = S.langueAudio || (S.reservation && S.reservation.langue) || 'fr';
@@ -301,14 +306,14 @@
     return t ? { nom: t.nom, recit: t.recit, lecture: t.lecture, lg } : { nom: x.nom, recit: x.recit, lg: 'fr' };
   }
   /** Fichier MP3 enregistré : indiqué dans le lieu, sinon audio/<langue>/<id>.mp3
-      (voix de femme en arabe : audio/<langue>/<id>-f.mp3) */
+      (voix de femme : audio/<langue>/<id>-f.mp3) */
   const MP3 = window.DOORBINA_MP3;
   const mp3Absents = new Set(); // fichiers introuvables : on passe à la voix du téléphone
   function fichierAudio(x, lg) {
     let f = null;
     if (x.audio && typeof x.audio === 'object') f = x.audio[lg] || null;
     else if (x.audio && lg === 'fr') f = x.audio;
-    else if (MP3) f = `${MP3}/${lg}/${x.id}${arabe(lg) && genreVoix() === 'f' ? '-f' : ''}.mp3`;
+    else if (MP3) f = `${MP3}/${lg}/${x.id}${VOIX_MP3[lg] && genreVoix() === 'f' ? '-f' : ''}.mp3`;
     return f && !mp3Absents.has(f) ? f : null;
   }
   function dureeRecit(x) { return Math.max(1, Math.round(texte(x).recit.split(/\s+/).length / 150)); }
@@ -333,8 +338,8 @@
       <div class="audio-langs" role="group" aria-label="Langue de l’audio">
         ${Object.keys(LANGUES).map((k) => `<button type="button" class="${k === lg ? 'on' : ''}" data-action="audio-lang" data-lg="${k}" aria-pressed="${k === lg}" lang="${LANG_HTML[k]}">${LANG_COURT[k]}</button>`).join('')}
       </div>
-      ${mp3 && arabe(lg) ? `<div class="audio-langs audio-genre" role="group" aria-label="Voix">
-        ${Object.keys(VOIX_AR).map((g) => `<button type="button" class="${g === genreVoix() ? 'on' : ''}" data-action="audio-genre" data-g="${g}" aria-pressed="${g === genreVoix()}">${VOIX_AR[g]}</button>`).join('')}
+      ${mp3 && VOIX_MP3[lg] ? `<div class="audio-langs audio-genre" role="group" aria-label="Voix">
+        ${Object.keys(VOIX_MP3[lg]).map((g) => `<button type="button" class="${g === genreVoix() ? 'on' : ''}" data-action="audio-genre" data-g="${g}" aria-pressed="${g === genreVoix()}">${VOIX_MP3[lg][g]}</button>`).join('')}
       </div>` : ''}
       ${mp3 ? '' : TTS && !compact ? `<label class="audio-voix-l">Voix <select class="audio-voix" data-lg="${lg}" aria-label="Choisir la voix"></select></label>` : ''}
     </div>
