@@ -497,6 +497,7 @@
       }
     }
     majPanneau();
+    majRail();
   }
   function majPanneau() {
     const p = $('#map-panel');
@@ -565,6 +566,71 @@
     };
     Live.raf = requestAnimationFrame(step);
   }
+  /* ---------- Rail de progression (à droite de l'écran) ----------
+     Comme le menu d'étapes d'un site à défilement : chaque arrêt est un point,
+     et l'avatar du visiteur glisse le long du rail selon sa position GPS. */
+  const Rail = { el: null, cle: '' };
+  function arrets() {
+    const a = [{ type: 'depart', nom: 'Départ · agence Door Bina', court: 'Départ', lat: RETOUR.lat, lng: RETOUR.lng }];
+    LIEUX.forEach((l, i) => {
+      a.push(Object.assign({ type: 'lieu', i }, l));
+      if (l.pause) a.push({ type: 'pause', nom: PAUSE.nom, court: PAUSE.court, lat: l.lat, lng: l.lng });
+    });
+    a.push({ type: 'retour', nom: RETOUR.nom, court: 'Retour des vélos', lat: RETOUR.lat, lng: RETOUR.lng });
+    return a;
+  }
+  function positionRail(A) {
+    const done = S.stamps.length;
+    const iLieu = (k) => A.findIndex((a) => a.type === 'lieu' && a.i === k);
+    if (S.stage === 'pause') return { pos: A.findIndex((a) => a.type === 'pause'), ici: 'Pause thé' };
+    if (S.stage === 'lieu' && done < N) return { pos: iLieu(done), ici: `À ${LIEUX[done].court}` };
+    if (S.stage === 'stamp' && done > 0) return { pos: iLieu(done - 1), ici: `À ${LIEUX[done - 1].court}` };
+    const next = cible();
+    if (!next) return { pos: iLieu(N - 1), ici: `À ${LIEUX[N - 1].court}` };
+    if (!S.reservation && done === 0) return { pos: 0, ici: 'Au départ' };
+    const to = next === RETOUR ? A.length - 1 : iLieu(done), from = to - 1;
+    let f = 0, d = null;
+    if (Live.pos && !Live.far) {
+      d = distance(Live.pos, A[to]);
+      const tot = distance(A[from], A[to]);
+      f = tot > 1 ? Math.min(0.95, Math.max(0, 1 - d / tot)) : 0;
+    }
+    return { pos: from + f, ici: `Vers ${next === RETOUR ? 'le retour' : next.court}${d != null ? ` · ${fmtDist(d)}` : ''}` };
+  }
+  function majRail() {
+    if (!Rail.el) {
+      Rail.el = document.createElement('nav');
+      Rail.el.className = 'rail';
+      Rail.el.setAttribute('aria-label', 'Votre progression sur le parcours');
+      document.body.appendChild(Rail.el);
+    }
+    const r = route();
+    const visible = r === 'carte' || r === 'jeu' || (!!S.reservation && r !== 'equipe');
+    document.body.classList.toggle('has-rail', visible);
+    Rail.el.hidden = !visible;
+    if (!visible) return;
+    const A = arrets(), P = positionRail(A), n = A.length - 1;
+    const top = (k) => `${f1((k / n) * 100)}%`;
+    const etatArret = (k) => (k === P.pos ? 'ici' : k < P.pos ? 'done' : k === Math.ceil(P.pos) ? 'next' : 'locked');
+    const cle = A.map((_, k) => etatArret(k)).join() + (S.avatar || '');
+    if (cle !== Rail.cle) {
+      Rail.cle = cle;
+      Rail.el.innerHTML = `<span class="rail-track"><span class="rail-fill"></span></span>
+        ${A.map((a, k) => {
+          const e = etatArret(k);
+          const href = a.type === 'lieu' ? `#/lieu/${a.id}` : '#/carte';
+          const num = a.type === 'lieu' ? `${a.i + 1}. ` : '';
+          const txt = { done: 'passé', ici: 'vous êtes ici', next: 'prochain arrêt', locked: 'à venir' }[e];
+          return `<a class="rail-stop ${e} rs-${a.type}" href="${href}" style="top:${top(k)}" aria-label="${num}${a.nom} (${txt})"><span class="rail-label">${num}${a.court}</span></a>`;
+        }).join('')}
+        <div class="rail-me" aria-hidden="true"><span class="rail-bulle"></span>${avatarSvg(S.avatar || 'homme')}</div>`;
+    }
+    Rail.el.querySelector('.rail-fill').style.height = top(P.pos);
+    const me = Rail.el.querySelector('.rail-me');
+    me.style.top = top(P.pos);
+    me.querySelector('.rail-bulle').textContent = P.ici;
+  }
+
   function blocCarte() {
     return `<div class="map-shell">
       <div id="live-map" class="live-map" aria-label="Carte en direct"></div>
@@ -1244,6 +1310,7 @@
       else n.textContent = 'QR indisponible hors connexion : donnez le code manuel.';
     });
     syncAudioUI();
+    majRail();
     document.title = `Door Bina · ${TITRES[r]}`;
     const navKey = r === 'lieu' ? 'parcours' : (r || 'home');
     document.querySelectorAll('[data-nav]').forEach((a) => a.classList.toggle('active', a.dataset.nav === navKey));
