@@ -43,6 +43,15 @@ function cardHTML(stop, S, ici) {
       <p class="card__hint">Faites défiler pour avancer sur la route. Les points à droite vous emmènent directement à un lieu.</p>
       ${S.reservation ? '' : '<a class="card__link" href="index.html#/reserver">Réserver mes vélos →</a>'}`;
   }
+  if (stop.type === 'ciel') {
+    const fin = window.DOORBINA_FIN || { titre: '', texte: '', merci: '' };
+    return `<p class="eyebrow">Le mot de la fin</p>
+      <h2 class="card__ar" lang="ar" dir="rtl">قرطاج</h2>
+      <p class="card__theme">${esc(fin.titre)}</p>
+      <p class="sr-only">${esc(fin.texte)} ${esc(fin.merci)}</p>
+      <p class="card__actions"><a class="card__btn" href="index.html#/carnet">Mon passeport</a>
+        <button type="button" class="card__btn card__btn--ghost" data-restart>Recommencer le voyage</button></p>`;
+  }
   return `${vous}<p class="eyebrow">Arrivée</p>
     <h2>${esc(RETOUR.nom)}</h2>
     <p class="card__meta">${badge}</p>
@@ -50,7 +59,7 @@ function cardHTML(stop, S, ici) {
     <a class="card__link" href="index.html#/jeu">Voir mon score →</a>`;
 }
 
-export function createUI({ stops, stopS, S, onJump }) {
+export function createUI({ stops, stopS, S, onJump, onRestart }) {
   const nav = document.getElementById('stages');
   const card = document.getElementById('card');
   const fill = document.getElementById('progress-fill');
@@ -63,6 +72,8 @@ export function createUI({ stops, stopS, S, onJump }) {
   }).join('');
   const btns = [...nav.querySelectorAll('button')];
   btns.forEach((b) => b.addEventListener('click', () => onJump(Number(b.dataset.k))));
+  card.addEventListener('click', (e) => { if (e.target.closest('[data-restart]')) onRestart(); });
+  const last = stops.length - 1;
 
   let shown = -2, active = -1, me = -1;
   return {
@@ -74,12 +85,14 @@ export function createUI({ stops, stopS, S, onJump }) {
         active = k;
         btns.forEach((b, i) => b.classList.toggle('is-active', i === k));
       }
-      const visible = charS >= stopS[k] - 22 && charS <= stopS[k] + 12 ? k : -1;
+      const fin = k === last && stops[k].type === 'ciel';
+      const visible = charS >= stopS[k] - (fin ? 8 : 22) && (fin || charS <= stopS[k] + 12) ? k : -1;
       if (visible !== shown) {
         shown = visible;
         if (visible >= 0) {
           card.innerHTML = cardHTML(stops[visible], S, visible === me);
-          card.dataset.side = stops[visible].side < 0 ? 'right' : 'left'; // la fiche se place du côté opposé au monument
+          // la fiche se place du côté opposé au monument ; au ciel, en bas pour laisser voir le mot de la fin
+          card.dataset.side = fin ? 'bottom' : stops[visible].side < 0 ? 'right' : 'left';
           card.scrollTop = 0;
         }
         card.classList.toggle('is-visible', visible >= 0);

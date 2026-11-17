@@ -9,13 +9,17 @@ export const N = LIEUX.length;
 // Côté de la route où se dresse chaque monument : 1 = droite (côté mer), -1 = gauche
 const COTE = { 1: 1, 2: -1, 3: -1, 4: 1, 5: 1, 6: -1, 7: 1, 8: -1 };
 
-export function buildStops() {
+export const RAYON_ARRIVEE = 250; // mètres : même rayon que la validation dans le jeu
+
+export function buildStops({ ciel = true } = {}) {
   const a = [{ type: 'depart', key: 'depart', nom: 'Agence Door Bina', court: 'Départ', lat: RETOUR.lat, lng: RETOUR.lng, side: -1 }];
   LIEUX.forEach((l, i) => {
     a.push({ type: 'lieu', key: `lieu-${l.id}`, i, lieu: l, nom: l.nom, court: l.court, lat: l.lat, lng: l.lng, side: COTE[l.id] || (i % 2 ? -1 : 1) });
     if (l.pause) a.push({ type: 'pause', key: 'pause', nom: PAUSE.nom, court: PAUSE.court, lat: l.lat, lng: l.lng, side: 1 });
   });
   a.push({ type: 'retour', key: 'retour', nom: RETOUR.nom, court: 'Retour des vélos', lat: RETOUR.lat, lng: RETOUR.lng, side: -1 });
+  // Fin du voyage : on s'envole au-dessus des nuages pour le mot de la fin
+  if (ciel) a.push({ type: 'ciel', key: 'ciel', nom: 'Le mot de la fin', court: 'Le mot de la fin', side: 1 });
   return a;
 }
 
@@ -29,6 +33,7 @@ export const aCommence = (S) => !!S.reservation || S.stamps.length > 0;
 /** État d'un arrêt pour ce visiteur : done (passé), next (prochain), locked (à venir) */
 export function etatArret(stop, S) {
   const done = S.stamps.length;
+  if (stop.type === 'ciel') return 'ciel';
   if (stop.type === 'depart') return aCommence(S) ? 'done' : 'next';
   if (stop.type === 'lieu') return stop.i < done ? 'done' : stop.i === done ? 'next' : 'locked';
   if (stop.type === 'pause') {
@@ -61,15 +66,17 @@ export function maPosition(A, S, gps) {
   if (S.stage === 'stamp' && done > 0) return { pos: iLieu(done - 1), ici: `À ${LIEUX[done - 1].court}` };
   const versRetour = done >= N && S.codeOuvert;
   if (done >= N && !versRetour) return { pos: iLieu(N - 1), ici: `À ${LIEUX[N - 1].court}` };
-  const to = versRetour ? A.length - 1 : iLieu(done);
+  const to = versRetour ? A.findIndex((a) => a.type === 'retour') : iLieu(done);
   const from = to - 1;
   let f = 0, d = null;
   if (gps && distance(gps, { lat: 36.8545, lng: 10.329 }) < 6000) {
     d = distance(gps, A[to]);
+    // Arrivé : le GPS est dans le rayon du lieu
+    if (d <= RAYON_ARRIVEE) return { pos: to, ici: `Vous êtes à ${versRetour ? 'l’agence' : A[to].court}`, arrive: to, d };
     const tot = distance(A[from], A[to]);
     f = tot > 1 ? Math.min(0.95, Math.max(0, 1 - d / tot)) : 0;
   }
-  return { pos: from + f, ici: `En route vers ${versRetour ? 'le retour' : A[to].court}${d != null ? ` · ${fmtDist(d)}` : ''}` };
+  return { pos: from + f, ici: `En route vers ${versRetour ? 'le retour' : A[to].court}${d != null ? ` · ${fmtDist(d)}` : ''}`, d };
 }
 
 /** Horaires du jour (même règle que l'application) */

@@ -275,6 +275,13 @@
     texte: 'Rapportez les vélos à l’agence Door Bina. Le premier groupe arrivé gagne le cadeau du jour.'
   };
 
+  /* Le mot de la fin, dans le ciel, à la fin du voyage 3D (voyage.html). */
+  window.DOORBINA_FIN = {
+    titre: 'Qart-Hadasht, la « ville nouvelle »',
+    texte: 'Fondée selon la tradition en 814 avant notre ère, détruite en 146, rebâtie par Rome, chantée par les poètes : Carthage n’a jamais cessé de renaître. Aujourd’hui, c’est vous qui la faites revivre, un coup de pédale après l’autre.',
+    merci: 'Merci d’avoir pédalé avec Door Bina.'
+  };
+
   /* Cadre de la carte stylisée hors ligne (le trait de côte est dessiné pour ce cadre). */
   window.DOORBINA_MAP = { minLat: 36.836, maxLat: 36.870, minLng: 10.312, maxLng: 10.346 };
 

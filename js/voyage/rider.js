@@ -92,6 +92,24 @@ export function createRider(avatar = 'homme') {
   shadow.position.y = 0.05;
   root.add(shadow);
 
+  // Traînée dorée quand le vélo s'envole
+  const TRAIL = 60;
+  const trailPos = new Float32Array(TRAIL * 3);
+  const trailGeo = new THREE.BufferGeometry();
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+  const dot = document.createElement('canvas');
+  dot.width = dot.height = 32;
+  const dctx = dot.getContext('2d');
+  const grad = dctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  dctx.fillStyle = grad;
+  dctx.fillRect(0, 0, 32, 32);
+  const trail = new THREE.Points(trailGeo, new THREE.PointsMaterial({ color: '#ffd98a', map: new THREE.CanvasTexture(dot), size: 0.16, transparent: true, opacity: 0, depthWrite: false }));
+  trail.frustumCulled = false;
+  let trailInit = false;
+  const tail = new THREE.Vector3();
+
   const tan = new THREE.Vector3();
   const pedal = new THREE.Vector3(), hipS = new THREE.Vector3(), kn = new THREE.Vector3(), sh = new THREE.Vector3(), elbow = new THREE.Vector3(), hand = new THREE.Vector3();
   let crankA = 0, prevYaw = null, lean = 0, idle = 0, wave = 0;
@@ -122,11 +140,24 @@ export function createRider(avatar = 'homme') {
 
   return {
     root,
+    extras: [trail],
     update(path, s, speed, t, dt) {
       path.pointAt(s, root.position);
       path.tangentAt(s, tan);
       const yaw = Math.atan2(tan.x, tan.z);
       root.rotation.y = yaw;
+      // En vol : le vélo se cabre dans la montée, l'ombre disparaît, la traînée apparaît
+      const air = THREE.MathUtils.smoothstep(root.position.y, 0.3, 3);
+      body.rotation.x = -Math.asin(THREE.MathUtils.clamp(tan.y, -1, 1));
+      shadow.visible = root.position.y < 0.5;
+      tail.copy(root.position).addScaledVector(tan, -0.7);
+      tail.y += 0.1; // sous les roues, pour ne pas masquer la vue
+      if (!trailInit) { for (let i = 0; i < TRAIL; i++) trailPos.set([tail.x, tail.y, tail.z], i * 3); trailInit = true; }
+      trailPos.copyWithin(3, 0, (TRAIL - 1) * 3);
+      trailPos.set([tail.x + (Math.random() - 0.5) * 0.4, tail.y + (Math.random() - 0.5) * 0.4, tail.z + (Math.random() - 0.5) * 0.4], 0);
+      trailGeo.attributes.position.needsUpdate = true;
+      trail.material.opacity = 0.9 * air;
+      trail.visible = air > 0.01;
       // Penché dans les virages
       const turn = prevYaw === null ? 0 : (yaw - prevYaw) / Math.max(dt, 1e-3);
       prevYaw = yaw;

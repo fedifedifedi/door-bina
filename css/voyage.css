@@ -123,6 +123,43 @@ button { font: inherit; }
 .hint.is-hidden { opacity: 0; }
 @keyframes hint { 50% { transform: translate(-50%, 6px); } }
 
+/* Mot de la fin : fiche courte en bas, le grand panneau 3D reste visible */
+.card[data-side="bottom"] {
+  top: auto; bottom: 28px; left: 50%; right: auto; width: min(520px, calc(100vw - 32px));
+  text-align: center; transform: translate(-50%, 14px); padding: 20px 24px;
+}
+.card[data-side="bottom"].is-visible { transform: translate(-50%, 0); }
+.card__ar { font: 700 44px/1.1 Amiri, serif !important; color: var(--pourpre) !important; }
+.card__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 8px 0 0 !important; }
+.card__btn {
+  font: 700 14px/1 var(--sans); padding: 11px 16px; border-radius: 999px; cursor: pointer; text-decoration: none;
+  background: var(--pourpre); color: var(--pierre); border: 2px solid var(--pourpre);
+}
+.card__btn--ghost { background: transparent; color: var(--pourpre); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.stage--ciel::after { border-color: #ffd98a; border-radius: 2px; transform: rotate(45deg); }
+.stage--ciel.is-active::after { transform: rotate(45deg) scale(1.35); background: #ffd98a; }
+
+/* GPS en direct */
+.gps-status {
+  position: fixed; top: 64px; right: 16px; z-index: 25; margin: 0;
+  display: flex; align-items: center; gap: 8px;
+  font: 700 12px/1 var(--sans); color: var(--pierre); background: rgba(35, 31, 32, .7);
+  padding: 8px 12px; border-radius: 999px;
+}
+.gps-status[hidden], .toast[hidden] { display: none; }
+.live-dot { width: 9px; height: 9px; border-radius: 50%; background: #5fd38a; box-shadow: 0 0 0 0 rgba(95, 211, 138, .7); animation: live 1.6s infinite; }
+@keyframes live { 70% { box-shadow: 0 0 0 9px rgba(95, 211, 138, 0); } 100% { box-shadow: 0 0 0 0 rgba(95, 211, 138, 0); } }
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 26;
+  width: min(460px, calc(100vw - 32px)); padding: 16px 20px; border-radius: 14px;
+  background: var(--pourpre); color: var(--pierre); box-shadow: 0 14px 34px rgba(35, 31, 32, .3);
+  border-top: 4px solid var(--ocre); animation: toast .5s ease-out;
+}
+.toast strong { display: block; font: 600 26px/1.1 var(--serif); margin-bottom: 4px; }
+.toast a { display: inline-block; margin-top: 8px; color: #f3c08a; font-weight: 700; }
+@keyframes toast { from { opacity: 0; transform: translate(-50%, 12px); } }
+
 /* Chargement et secours */
 .loader {
   position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -154,6 +191,10 @@ button { font: inherit; }
     padding: 18px 18px 16px; transform: translateY(14px);
   }
   .card.is-visible, .card[data-side="right"].is-visible { transform: none; }
+  .card[data-side="bottom"] { left: 12px; right: 44px; width: auto; transform: translateY(14px); }
+  .card[data-side="bottom"].is-visible { transform: none; }
+  .gps-status { top: 54px; right: 10px; font-size: 11px; }
+  .toast { top: 92px; bottom: auto; }
   .card h2 { font-size: 30px; }
   .card__photo { display: none; }
   .hint { bottom: 16px; }
