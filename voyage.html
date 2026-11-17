@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Door Bina · Le voyage 3D</title>
+  <meta name="description" content="Pédalez en 3D à travers les huit lieux du parcours Door Bina à Carthage, et voyez où vous en êtes.">
+  <meta name="theme-color" content="#611335">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cormorant+Garamond:ital,wght@0,600;1,500;1,600&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/voyage.css">
+  <!-- Three.js, version figée, chargé depuis un CDN (pas de build) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script src="js/data.js"></script>
+  <script type="module" src="js/voyage/main.js"></script>
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="progress-line" aria-hidden="true"><span id="progress-fill"></span></div>
+
+  <header class="v-top">
+    <a class="v-brand" href="index.html">Door Bina <span>· le voyage</span></a>
+    <div class="v-actions">
+      <button id="btn-me" class="v-btn" type="button" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.6-6-10.5a6 6 0 0 1 12 0C18 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.2"/></svg>
+        Ma position</button>
+      <button id="btn-gps" class="v-btn v-btn--ghost" type="button" hidden>Activer le GPS</button>
+      <a class="v-btn v-btn--ghost v-btn--classique" href="index.html#/carte">Version classique</a>
+    </div>
+  </header>
+
+  <nav class="stages" id="stages" aria-label="Arrêts du parcours"></nav>
+  <section id="card" class="card" aria-live="polite" inert></section>
+  <p id="hint" class="hint" aria-hidden="true">Faites défiler pour pédaler</p>
+
+  <div class="scroll-track" id="scroll-track"></div>
+
+  <div id="loader" class="loader" role="status">
+    <p class="loader__name">Door Bina</p>
+    <p class="loader__sub">On gonfle les pneus…</p>
+  </div>
+
+  <div id="fallback" class="fallback" hidden>
+    <h1>Le voyage 3D ne peut pas s’ouvrir ici</h1>
+    <p>Votre navigateur ne permet pas l’affichage en 3D. Le parcours reste disponible dans la version classique.</p>
+    <a class="v-btn" href="index.html#/parcours">Voir le parcours</a>
+  </div>
+</body>
+</html>

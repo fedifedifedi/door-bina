@@ -135,6 +135,8 @@ p { margin: 0 0 1em; }
 .btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--ocre); outline-offset: 2px; }
 .btn-outline { background: transparent; color: var(--pourpre); }
 .btn-outline:hover { background: rgba(97,19,53,.06); border-color: var(--pourpre); }
+.hero .btn-outline { color: var(--pierre); border-color: var(--pierre); margin: 8px 0 0 8px; }
+.hero .btn-outline:hover { background: rgba(246,236,209,.12); }
 /* Sur fond pourpre : le bouton passe en ocre avec un texte noir */
 .btn-ocre { background: var(--ocre); border-color: var(--ocre); color: var(--noir); }
 .btn-ocre:hover { background: #d8924d; border-color: #d8924d; }

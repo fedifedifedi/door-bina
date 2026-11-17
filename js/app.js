@@ -649,6 +649,7 @@
           <h1>Faisons le tour ensemble</h1>
           <p class="lead">Un jeu de piste à vélo, sans guide, à travers huit lieux. L’histoire se découvre en pédalant.</p>
           <a class="btn btn-ocre" href="#/reserver">Réserver un vélo</a>
+          <a class="btn btn-outline" href="voyage.html">Le voyage en 3D</a>
           <hr class="rule">
           <p class="ar" lang="ar" dir="rtl">دوربينا</p>
         </div>
@@ -1283,6 +1284,7 @@
       <p class="label">La carte</p>
       <h1>Où suis-je ?</h1>
       <p>Le vélo, c’est vous : il avance avec le GPS. ✓ étape validée, anneau : prochaine étape, pointillés : étape verrouillée. Touchez un lieu pour voir ses horaires et son audio.</p>
+      <p><a class="btn btn-outline" href="voyage.html">Me voir dans le voyage 3D</a></p>
     </div>
     <section class="section tight"><div class="wrap">
       ${S.avatar ? blocCarte() : `<div class="game">${choixAvatar('Choisissez votre cycliste')}</div>`}
