@@ -22,5 +22,9 @@ La carte suit le visiteur, un audioguide raconte chaque lieu, et huit indices ou
   `voyage.html?etape=3` ouvre directement un arrêt. En local, servir le dossier (ex. `python -m http.server`) :
   les modules JavaScript ne s'ouvrent pas en double-cliquant le fichier.
 
+Mise à jour du site : après une modification du style ou des scripts, changez le numéro `?v=…`
+dans `index.html` et `voyage.html` (ex. `?v=20261118` → `?v=20261119`), sinon les téléphones
+gardent l'ancienne version en mémoire jusqu'à 10 minutes.
+
 Prototype : les réservations sont gardées sur le téléphone du visiteur, sans serveur ni paiement.
 Coordonnées GPS, horaires et textes historiques à vérifier sur le terrain avant le lancement.
