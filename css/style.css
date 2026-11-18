@@ -85,7 +85,12 @@ p { margin: 0 0 1em; }
 .on-light { --logo-l: var(--pourpre); --logo-w: var(--ocre); --logo-h: var(--pourpre); }
 
 /* ---------- En-tête ---------- */
-.site-header { background: var(--pourpre); color: var(--pierre); border-bottom: 1px solid var(--ocre); position: sticky; top: 0; z-index: 20; }
+.site-header { background: var(--pourpre); color: var(--pierre); position: sticky; top: 0; z-index: 20; }
+/* Frise de vagues façon mosaïque romaine : sous l'en-tête et au-dessus du pied de page */
+.site-header::after, .site-footer::before {
+  content: ''; display: block; height: 14px;
+  background: var(--pourpre) url("../assets/frise.svg") repeat-x center / auto 14px;
+}
 .header-row { display: flex; align-items: center; justify-content: space-between; min-height: 64px; padding-top: 10px; padding-bottom: 10px; }
 .brand { display: block; text-decoration: none; }
 .brand-full { display: none; width: 120px; }   /* taille minimale du logo complet : 120 px */
@@ -117,7 +122,8 @@ p { margin: 0 0 1em; }
 @media (min-width: 900px) { .tabbar { display: none; } }
 
 /* Pied de page */
-.site-footer { background: var(--pourpre); color: var(--pierre); padding: 28px 0; }
+.site-footer { background: var(--pourpre); color: var(--pierre); padding: 0 0 28px; }
+.site-footer::before { margin-bottom: 28px; }
 .site-footer .label { color: var(--pierre); margin: 0; }
 .footer-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .site-footer .ar { font-size: 30px; }
