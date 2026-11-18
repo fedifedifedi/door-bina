@@ -30,7 +30,9 @@
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 body {
   margin: 0;
-  background: var(--pierre);
+  /* Fond « carthaginois » : signe de Tanit, disque et croissant, amphore, rosace et tesselles, en ocre très pâle */
+  background: var(--pierre) url("../assets/motif-carthage.svg") repeat;
+  background-size: 280px 280px;
   color: var(--noir);
   font: 400 18px/1.5 var(--sans);
   min-height: 100vh;

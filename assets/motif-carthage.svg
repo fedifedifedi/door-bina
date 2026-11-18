@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="280" viewBox="0 0 280 280">
+  <!-- Motif de fond : signe de Tanit, disque et croissant puniques, amphore, rosace de mosaïque, tesselles -->
+  <g fill="none" stroke="#8a5a2b" stroke-opacity=".13" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Signe de Tanit -->
+    <g transform="translate(70 62)">
+      <circle cx="0" cy="-22" r="9"/>
+      <path d="M-20 -8 H20 M-20 -8 V-15 M20 -8 V-15"/>
+      <path d="M0 -8 L-17 26 H17 Z"/>
+    </g>
+    <!-- Amphore -->
+    <g transform="translate(205 70)">
+      <path d="M-7 -34 H7 M-5 -34 V-26 C-18 -20 -20 2 -11 18 L0 34 L11 18 C20 2 18 -20 5 -26 V-34"/>
+      <path d="M-5 -26 C-14 -28 -15 -16 -9 -12 M5 -26 C14 -28 15 -16 9 -12"/>
+      <path d="M-14 -4 H14 M-13 6 H13" stroke-opacity=".08"/>
+    </g>
+    <!-- Rosace de mosaïque -->
+    <g transform="translate(205 205)">
+      <circle r="26"/>
+      <circle r="6"/>
+      <path d="M0 -26 Q9 -13 0 -6 Q-9 -13 0 -26 M0 26 Q9 13 0 6 Q-9 13 0 26 M-26 0 Q-13 9 -6 0 Q-13 -9 -26 0 M26 0 Q13 9 6 0 Q13 -9 26 0"/>
+      <path d="M-18 -18 Q-6 -12 -4 -4 Q-12 -6 -18 -18 M18 18 Q6 12 4 4 Q12 6 18 18 M18 -18 Q12 -6 4 -4 Q6 -12 18 -18 M-18 18 Q-12 6 -4 4 Q-6 12 -18 18" stroke-opacity=".09"/>
+    </g>
+    <!-- Disque et croissant (symbole punique) -->
+    <g transform="translate(70 205)">
+      <circle cx="0" cy="-8" r="9"/>
+      <path d="M-18 4 A18 18 0 0 0 18 4 A14 12 0 0 1 -18 4 Z"/>
+    </g>
+  </g>
+  <!-- Tesselles éparses -->
+  <g fill="#8a5a2b" fill-opacity=".1">
+    <rect x="136" y="18" width="5" height="5" transform="rotate(12 138 20)"/>
+    <rect x="132" y="136" width="6" height="6" transform="rotate(45 135 139)"/>
+    <rect x="18" y="138" width="4" height="4"/>
+    <rect x="258" y="138" width="4" height="4"/>
+    <rect x="140" y="252" width="5" height="5" transform="rotate(-10 142 254)"/>
+    <circle cx="118" cy="98" r="2"/>
+    <circle cx="160" cy="178" r="2"/>
+  </g>
+</svg>
