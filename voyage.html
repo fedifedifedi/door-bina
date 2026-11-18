@@ -9,7 +9,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cormorant+Garamond:ital,wght@0,600;1,500;1,600&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:ital,wght@0,600;1,500;1,600&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/voyage.css">
   <!-- Three.js, version figée, chargé depuis un CDN (pas de build) -->
   <script type="importmap">
@@ -28,13 +28,14 @@
   <div class="progress-line" aria-hidden="true"><span id="progress-fill"></span></div>
 
   <header class="v-top">
-    <a class="v-brand" href="index.html">Door Bina <span>· le voyage</span></a>
+    <a class="v-brand" href="index.html">Door Bina<span id="brand-sous"> · le voyage</span></a>
     <div class="v-actions">
+      <div id="langues" class="v-langs" role="group" aria-label="Langue / Language / اللغة"></div>
       <button id="btn-me" class="v-btn" type="button" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6-5.6-6-10.5a6 6 0 0 1 12 0C18 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.2"/></svg>
-        Ma position</button>
+        <span id="btn-me-txt">Ma position</span></button>
       <button id="btn-gps" class="v-btn v-btn--ghost" type="button" hidden>Activer le GPS</button>
-      <a class="v-btn v-btn--ghost v-btn--classique" href="index.html#/carte">Version classique</a>
+      <a id="btn-classique" class="v-btn v-btn--ghost v-btn--classique" href="index.html#/carte">Version classique</a>
     </div>
   </header>
 
@@ -48,13 +49,13 @@
 
   <div id="loader" class="loader" role="status">
     <p class="loader__name">Door Bina</p>
-    <p class="loader__sub">On gonfle les pneus…</p>
+    <p class="loader__sub" id="loader-sub">On gonfle les pneus…</p>
   </div>
 
   <div id="fallback" class="fallback" hidden>
-    <h1>Le voyage 3D ne peut pas s’ouvrir ici</h1>
-    <p>Votre navigateur ne permet pas l’affichage en 3D. Le parcours reste disponible dans la version classique.</p>
-    <a class="v-btn" href="index.html#/parcours">Voir le parcours</a>
+    <h1 id="fallback-titre">Le voyage 3D ne peut pas s’ouvrir ici</h1>
+    <p id="fallback-texte">Votre navigateur ne permet pas l’affichage en 3D. Le parcours reste disponible dans la version classique.</p>
+    <a id="fallback-btn" class="v-btn" href="index.html#/parcours">Voir le parcours</a>
   </div>
 </body>
 </html>

@@ -43,6 +43,16 @@ button { font: inherit; }
   box-shadow: 0 4px 14px rgba(35, 31, 32, .2);
 }
 .v-btn[hidden] { display: none; }
+/* Choix de la langue : FR / EN / ع */
+.v-langs { display: inline-flex; border-radius: 999px; overflow: hidden; background: rgba(250, 245, 232, .92); border: 2px solid var(--pourpre); box-shadow: 0 4px 14px rgba(35, 31, 32, .2); }
+.v-langs button { font: 700 13px/1 var(--sans); padding: 8px 11px; border: 0; background: none; color: var(--pourpre); cursor: pointer; }
+.v-langs button + button { border-left: 1px solid rgba(97, 19, 53, .25); }
+.v-langs button.on { background: var(--pourpre); color: var(--pierre); }
+.v-langs button[lang="ar"] { font: 700 16px/1 Amiri, serif; }
+[dir="rtl"] .card, .card[dir="rtl"] { text-align: right; }
+.card[dir="rtl"] h2, .card[dir="rtl"] .card__theme, .toast[dir="rtl"] strong { font-family: Amiri, serif; font-style: normal; }
+.card[dir="rtl"] .eyebrow { letter-spacing: 0; font-size: 14px; }
+.card[data-side="bottom"] { text-align: center; }
 .v-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
 .v-btn--ghost { background: rgba(250, 245, 232, .92); color: var(--pourpre); }
 .v-btn:hover { filter: brightness(1.08); }
@@ -74,7 +84,7 @@ button { font: inherit; }
 .stage.is-active.stage--done::after { background: var(--pourpre); }
 /* L'arrêt où se trouve le visiteur : une épingle ocre */
 .stage.is-me::before {
-  content: 'Vous'; order: 1; font: 700 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+  content: attr(data-vous); order: 1; font: 700 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
   background: var(--ocre); color: var(--noir); padding: 3px 6px; border-radius: 4px;
 }
 .stage.is-me span { order: 0; }

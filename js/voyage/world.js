@@ -3,6 +3,7 @@
 // et ses détails animés ; le monument se construit sous les yeux du visiteur quand il approche.
 import * as THREE from 'three';
 import { rng, mergeColored, flatMat, part, canvasTexture, roundRect, text } from './utils.js';
+import { t, rtl } from './i18n.js';
 
 const C = {
   pourpre: '#611335', pierre: '#F6ECD1', ivoire: '#FAF5E8', ocre: '#CA823C', bleu: '#1E5A87', noir: '#231F20',
@@ -380,7 +381,8 @@ function plazaGeo(th, w, d) {
 }
 
 /* ================= Panneau 3D de chaque arrêt ================= */
-const ETATS = { done: '✓ ÉTAPE VALIDÉE', next: 'PROCHAINE ÉTAPE', locked: 'À VENIR' };
+const ETATS = { done: 'sDone', next: 'sNext', locked: 'sLocked' };
+const ARABE = 'Amiri, serif';
 function makeSign(stop, etat, th) {
   const W = 4.8, H = 2.6;
   const tex = canvasTexture(960, 520, (ctx, w, h) => {
@@ -391,18 +393,21 @@ function makeSign(stop, etat, th) {
     ctx.strokeStyle = C.ocre;
     roundRect(ctx, 18, 18, w - 36, h - 36, 22);
     ctx.stroke();
-    ctx.fillStyle = th.motif; // pastille à la couleur du lieu
-    ctx.beginPath(); ctx.arc(w - 80, 92, 22, 0, Math.PI * 2); ctx.fill();
     const pad = 64;
-    const eyebrow = stop.type === 'lieu' ? `ÉTAPE ${stop.i + 1} · ${stop.lieu.epoque.toUpperCase()}` : stop.type === 'pause' ? 'PAUSE · 20 MIN' : stop.type === 'depart' ? 'DÉPART' : 'ARRIVÉE';
-    text(ctx, eyebrow, pad, 110, { font: `700 30px ${SANS}`, color: C.ocre, align: 'left', spacing: 6, maxWidth: w - pad * 2 - 60 });
-    text(ctx, stop.nom, pad, 215, { font: `600 84px ${SERIF}`, color: C.pierre, align: 'left', maxWidth: w - pad * 2 });
-    const sous = stop.type === 'lieu' ? stop.lieu.theme : stop.type === 'pause' ? 'Thé à la menthe face à la mer' : 'Vélos · Door Bina';
-    text(ctx, sous, pad, 290, { font: `italic 500 44px ${SERIF}`, color: C.pierre, align: 'left', maxWidth: w - pad * 2 });
+    // En arabe : texte aligné à droite, police Amiri, sans espacement entre les lettres (sinon elles se détachent)
+    const x0 = rtl ? w - pad : pad, al = rtl ? 'right' : 'left', sp = rtl ? 0 : 1;
+    if ('direction' in ctx) ctx.direction = rtl ? 'rtl' : 'ltr';
+    ctx.fillStyle = th.motif; // pastille à la couleur du lieu
+    ctx.beginPath(); ctx.arc(rtl ? 80 : w - 80, 92, 22, 0, Math.PI * 2); ctx.fill();
+    const eyebrow = stop.type === 'lieu' ? t('sEtape', { i: stop.i + 1, e: stop.lieu.epoque }) : stop.type === 'pause' ? t('sPause') : stop.type === 'depart' ? t('sDepart') : t('sArrivee');
+    text(ctx, rtl ? eyebrow : eyebrow.toUpperCase(), x0, 110, { font: rtl ? `700 40px ${ARABE}` : `700 30px ${SANS}`, color: C.ocre, align: al, spacing: 6 * sp, maxWidth: w - pad * 2 - 60 });
+    text(ctx, stop.nom, x0, 215, { font: rtl ? `700 78px ${ARABE}` : `600 84px ${SERIF}`, color: C.pierre, align: al, maxWidth: w - pad * 2 });
+    const sous = stop.type === 'lieu' ? stop.lieu.theme : stop.type === 'pause' ? t('sPauseSous') : t('sVelos');
+    text(ctx, sous, x0, 292, { font: rtl ? `400 46px ${ARABE}` : `italic 500 44px ${SERIF}`, color: C.pierre, align: al, maxWidth: w - pad * 2 });
     ctx.fillStyle = 'rgba(246,236,209,.25)';
     ctx.fillRect(pad, 340, w - pad * 2, 2);
-    if (ETATS[etat]) text(ctx, ETATS[etat], pad, 420, { font: `700 34px ${SANS}`, color: etat === 'locked' ? 'rgba(246,236,209,.6)' : C.ocre, align: 'left', spacing: 4 });
-    text(ctx, 'دوربينا', w - pad, 430, { font: `700 48px Amiri, serif`, color: 'rgba(246,236,209,.55)', align: 'right' });
+    if (ETATS[etat]) text(ctx, t(ETATS[etat]), x0, 420, { font: rtl ? `700 40px ${ARABE}` : `700 34px ${SANS}`, color: etat === 'locked' ? 'rgba(246,236,209,.6)' : C.ocre, align: al, spacing: 4 * sp });
+    text(ctx, 'دوربينا', rtl ? pad : w - pad, 430, { font: `700 48px ${ARABE}`, color: 'rgba(246,236,209,.55)', align: rtl ? 'left' : 'right' });
   });
   const g = new THREE.Group();
   const board = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
@@ -782,8 +787,9 @@ export function createBeacon() {
         ctx.fillStyle = '#5fd38a';
         ctx.beginPath(); ctx.arc(70, 64, 13, 0, Math.PI * 2); ctx.fill();
       }
-      text(ctx, 'VOUS ÊTES ICI', 320, 78, { font: `700 46px ${SANS}`, color: C.pierre, spacing: 6 });
-      text(ctx, sous, 320, 130, { font: `italic 600 38px ${SERIF}`, color: '#f3c08a', maxWidth: 560 });
+      if ('direction' in ctx) ctx.direction = rtl ? 'rtl' : 'ltr';
+      text(ctx, t('ICI'), 320, 78, { font: rtl ? `700 52px ${ARABE}` : `700 46px ${SANS}`, color: C.pierre, spacing: rtl ? 0 : 6, maxWidth: 480 });
+      text(ctx, sous, 320, 132, { font: rtl ? `400 40px ${ARABE}` : `italic 600 38px ${SERIF}`, color: '#f3c08a', maxWidth: 560 });
       tex.needsUpdate = true;
     },
     update(t, dt = 0.016) {

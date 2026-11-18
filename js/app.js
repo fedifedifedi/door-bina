@@ -328,7 +328,7 @@
         <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
       </button>
       <div class="audio-meta">
-        <strong>${compact ? x.nom : 'Écouter le lieu'}${ecoute ? ' <span class="ok">✓</span>' : ''}</strong>
+        <strong>${compact ? x.nom : tr('ecouterLieu')}${ecoute ? ' <span class="ok">✓</span>' : ''}</strong>
         <span class="audio-status">≈ ${dureeRecit(x)} min · ${LANGUES[lg]}</span>
         <div class="audio-bar"><i></i></div>
       </div>
@@ -345,9 +345,9 @@
     </div>
     <p class="audio-msg" hidden></p>
     ${compact ? '' : `<details class="transcript"${TTS || x.audio ? '' : ' open'}>
-      <summary>Lire le texte</summary>
+      <summary>${tr('lireTexte')}</summary>
       <p lang="${LANG_HTML[t.lg]}"${dir}>${t.recit}</p>
-      ${ecoute ? '' : `<button class="btn-link" data-action="lu" data-id="${x.id}">J’ai lu le texte en entier</button>`}
+      ${ecoute ? '' : `<button class="btn-link" data-action="lu" data-id="${x.id}">${tr('luEntier')}</button>`}
     </details>`}`;
   }
   /* ---------- Voix de synthèse ----------
@@ -397,7 +397,7 @@
       box.dataset.state = st;
       const x = trouver(+box.dataset.id);
       const s = box.querySelector('.audio-status');
-      if (s) s.textContent = st === 'playing' ? 'Lecture en cours…' : st === 'paused' ? 'En pause' : `≈ ${dureeRecit(x)} min · ${LANGUES[langueAudio()]}`;
+      if (s) s.textContent = st === 'playing' ? tr('lecture') : st === 'paused' ? tr('pause') : `≈ ${dureeRecit(x)} min · ${LANGUES[langueAudio()]}`;
       const bar = box.querySelector('.audio-bar i');
       if (bar) bar.style.width = actif ? Math.round(audioProgres() * 100) + '%' : (S.ecoutes[x.id] ? '100%' : '0%');
     });
@@ -896,6 +896,64 @@
     return `<ol class="frise">${l.frise.map(([d, t]) => `<li><span class="frise-date">${d}</span><span>${t}</span></li>`).join('')}</ol>`;
   }
 
+  /* ---------- Le jeu en trois langues (suit la langue de l'audioguide ; la derja utilise l'arabe) ---------- */
+  const JEU = window.DOORBINA_JEU || {};
+  const langueJeu = () => { const lg = langueAudio(); return lg === 'tn' ? 'ar' : lg; };
+  /** Le lieu dans la langue du jeu : nom, époque, thème, question, réponses, direction, indice, frise */
+  function contenu(l) {
+    const lg = langueJeu(), j = JEU[lg] && JEU[lg][l.id];
+    return j ? Object.assign({}, l, j, { nom: texte(l, lg).nom }) : l;
+  }
+  const UI = {
+    fr: {
+      points: 'Le jeu · {n} points', arrive: 'Vous êtes arrivé', route: 'En route', etape: 'Étape {i} sur {n}',
+      presence: 'Présence', ecoute: 'Écoute', observation: 'Observation', indice: 'Indice',
+      frise: 'Le lieu à travers le temps', audio: 'L’audioguide', ecouterAvant: 'Écoutez l’audio en entier pour débloquer le défi : la réponse s’y cache.',
+      defi: 'Le défi', apresEcoute: '🔒 Disponible après l’écoute.', faux: '✗ Mauvaise réponse : −{p} points.', bonneEtait: 'La bonne réponse était :',
+      bonne: '✓ Bonne réponse :', uneChance: 'Une seule chance : une mauvaise réponse coûte {p} points.',
+      trouver: 'Trouver l’indice', cachee: 'Une lettre est cachée <strong>{ou}</strong>. Explorez tous les coins, puis saisissez-la.',
+      uneChanceLettre: 'Une seule chance : une mauvaise lettre coûte {p} points.', lettre: 'Lettre trouvée', valider: 'Valider',
+      pasTrouve: 'Je ne trouve pas l’indice (−{p} points)', apresDefi: '🔒 Disponible après le défi.',
+      direction: 'Direction', suivre: 'Suivez votre cycliste sur la carte : l’app vous prévient à l’arrivée et lance l’audio.',
+      surPlace: 'Je suis sur place', itineraire: 'Itinéraire', creneau: 'Créneau conseillé :', fermeEntree: 'Si le lieu est fermé, l’indice est placé à l’entrée.',
+      passeport: 'Mon passeport', carte: 'Carte',
+      ecouterLieu: 'Écouter le lieu', lireTexte: 'Lire le texte', luEntier: 'J’ai lu le texte en entier', lecture: 'Lecture en cours…', pause: 'En pause',
+    },
+    en: {
+      points: 'The game · {n} points', arrive: 'You have arrived', route: 'On the way', etape: 'Stage {i} of {n}',
+      presence: 'Presence', ecoute: 'Listening', observation: 'Observation', indice: 'Clue',
+      frise: 'The place through time', audio: 'Audio guide', ecouterAvant: 'Listen to the whole audio to unlock the challenge: the answer is hidden in it.',
+      defi: 'The challenge', apresEcoute: '🔒 Available after listening.', faux: '✗ Wrong answer: −{p} points.', bonneEtait: 'The right answer was:',
+      bonne: '✓ Right answer:', uneChance: 'Only one try: a wrong answer costs {p} points.',
+      trouver: 'Find the clue', cachee: 'A letter is hidden <strong>{ou}</strong>. Explore every corner, then type it in.',
+      uneChanceLettre: 'Only one try: a wrong letter costs {p} points.', lettre: 'Letter found', valider: 'Confirm',
+      pasTrouve: 'I can’t find the clue (−{p} points)', apresDefi: '🔒 Available after the challenge.',
+      direction: 'Directions', suivre: 'Follow your cyclist on the map: the app tells you when you arrive and starts the audio.',
+      surPlace: 'I’m here', itineraire: 'Route', creneau: 'Suggested time:', fermeEntree: 'If the place is closed, the clue is placed at the entrance.',
+      passeport: 'My passport', carte: 'Map',
+      ecouterLieu: 'Listen to the place', lireTexte: 'Read the text', luEntier: 'I have read the whole text', lecture: 'Playing…', pause: 'Paused',
+    },
+    ar: {
+      points: 'اللعبة · {n} نقطة', arrive: 'لقد وصلتم', route: 'في الطريق', etape: 'المرحلة {i} من {n}',
+      presence: 'الحضور', ecoute: 'الاستماع', observation: 'الملاحظة', indice: 'الدليل',
+      frise: 'المكان عبر الزمن', audio: 'الدليل الصوتي', ecouterAvant: 'استمعوا إلى التسجيل كاملًا لفتح التحدّي: فالجواب مخبّأ فيه.',
+      defi: 'التحدّي', apresEcoute: '🔒 متاح بعد الاستماع.', faux: '✗ إجابة خاطئة: −{p} نقاط.', bonneEtait: 'الإجابة الصحيحة كانت:',
+      bonne: '✓ إجابة صحيحة:', uneChance: 'محاولة واحدة فقط: الإجابة الخاطئة تكلّف {p} نقاط.',
+      trouver: 'ابحثوا عن الدليل', cachee: 'هناك حرف مخبّأ <strong>{ou}</strong>. استكشفوا كل الزوايا، ثم اكتبوه (حرف لاتيني).',
+      uneChanceLettre: 'محاولة واحدة فقط: الحرف الخاطئ يكلّف {p} نقاط.', lettre: 'الحرف الذي وجدتموه', valider: 'تأكيد',
+      pasTrouve: 'لا أجد الدليل (−{p} نقاط)', apresDefi: '🔒 متاح بعد التحدّي.',
+      direction: 'الاتجاه', suivre: 'تابعوا درّاجكم على الخريطة: سينبّهكم التطبيق عند الوصول ويشغّل التسجيل.',
+      surPlace: 'أنا في المكان', itineraire: 'المسار', creneau: 'الوقت المقترح:', fermeEntree: 'إذا كان المكان مغلقًا، يوضع الدليل عند المدخل.',
+      passeport: 'جواز سفري', carte: 'الخريطة',
+      ecouterLieu: 'استمعوا إلى المكان', lireTexte: 'اقرؤوا النص', luEntier: 'قرأت النص كاملًا', lecture: 'جارٍ التشغيل…', pause: 'متوقّف مؤقتًا',
+    },
+  };
+  /** Texte de l'interface du jeu, avec ses valeurs : tr('etape', { i: 2, n: 8 }) */
+  function tr(cle, v = {}) {
+    const s = (UI[langueJeu()] || UI.fr)[cle] || UI.fr[cle] || cle;
+    return s.replace(/\{(\w+)\}/g, (_, k) => (v[k] != null ? v[k] : ''));
+  }
+
   function prix(f) {
     return (+f.adultes || 0) * (TARIFS[f.velo] || 0) + (+f.enfants || 0) * TARIFS.enfant + (+f.petits || 0) * TARIFS.siege;
   }
@@ -1088,90 +1146,95 @@
     }
 
     const l = LIEUX[done];
+    const c = contenu(l); // le lieu dans la langue du jeu
     const st = statut(l);
     let corps = '';
 
     if (S.stage === 'start') {
       const fermeJour = st && st.journee && !l.horaires.ferme;
       corps = `
-        <p>${puceStatut(l)} <span class="muted">Créneau conseillé : ${creneau(l)}</span></p>
+        <p>${puceStatut(l)} <span class="muted">${tr('creneau')} ${creneau(l)}</span></p>
         ${fermeJour && l.sautable ? `
           <div class="geo-msg">${l.nom} est fermé aujourd’hui. Le parcours commence à l’étape suivante, et l’indice <strong>${l.lettre}</strong> vous est offert.
           <br><button class="btn-link" data-action="skip">Passer à ${LIEUX[done + 1].nom}</button></div>` : ''}
-        ${st && st.etat !== 'ouvert' && !(fermeJour && l.sautable) ? `<p class="note">Si le lieu est fermé, l’indice est placé à l’entrée.</p>` : ''}
-        <div class="bloc"><button class="btn" data-action="route">Itinéraire</button></div>`;
+        ${st && st.etat !== 'ouvert' && !(fermeJour && l.sautable) ? `<p class="note">${tr('fermeEntree')}</p>` : ''}
+        <div class="bloc"><button class="btn" data-action="route">${tr('itineraire')}</button></div>`;
     } else if (S.stage === 'route') {
       corps = `
         <div class="bloc">
-          <p class="label">Direction</p>
-          <p class="indice">« ${l.direction} »</p>
-          <p class="note" style="margin:0 0 14px">Suivez votre cycliste sur la carte : l’app vous prévient à l’arrivée et lance l’audio.</p>
+          <p class="label">${tr('direction')}</p>
+          <p class="indice">« ${c.direction} »</p>
+          <p class="note" style="margin:0 0 14px">${tr('suivre')}</p>
         </div>
         <div class="map-in-card">${blocCarte()}</div>
         <div class="bloc">
-          <button class="btn" data-action="arrive">Je suis sur place</button>
+          <button class="btn" data-action="arrive">${tr('surPlace')}</button>
           ${geoMsg ? `<div class="geo-msg" role="status">${geoMsg}</div>` : ''}
         </div>`;
     } else if (S.stage === 'lieu') {
       const ecoute = !!S.ecoutes[l.id];
       const qok = !!S.qok[l.id];
-      const rot = (l.id * 2) % l.choix.length;
-      const ordre = l.choix.map((_, k) => k);
+      // Les réponses gardent le même ordre dans toutes les langues : la bonne est toujours à l'indice l.reponse
+      const rot = (l.id * 2) % c.choix.length;
+      const ordre = c.choix.map((_, k) => k);
       const choix = ordre.slice(rot).concat(ordre.slice(0, rot));
+      const p = POINTS.erreur;
       corps = `
         <ol class="etapes-lieu">
-          <li class="fait"><span>Présence</span></li>
-          <li class="${ecoute ? 'fait' : 'encours'}"><span>Écoute</span></li>
-          <li class="${qok ? 'fait' : ecoute ? 'encours' : ''}"><span>Observation</span></li>
-          <li class="${qok ? 'encours' : ''}"><span>Indice</span></li>
+          <li class="fait"><span>${tr('presence')}</span></li>
+          <li class="${ecoute ? 'fait' : 'encours'}"><span>${tr('ecoute')}</span></li>
+          <li class="${qok ? 'fait' : ecoute ? 'encours' : ''}"><span>${tr('observation')}</span></li>
+          <li class="${qok ? 'encours' : ''}"><span>${tr('indice')}</span></li>
         </ol>
         <div class="bloc">
-          <p class="label">Le lieu à travers le temps</p>
-          ${frise(l)}
+          <p class="label">${tr('frise')}</p>
+          ${frise(c)}
         </div>
         <div class="bloc">
-          <p class="label">L’audioguide</p>
+          <p class="label">${tr('audio')}</p>
           ${lecteur(l)}
-          ${ecoute ? '' : '<p class="note">Écoutez l’audio en entier pour débloquer le défi : la réponse s’y cache.</p>'}
+          ${ecoute ? '' : `<p class="note">${tr('ecouterAvant')}</p>`}
         </div>
         <div class="bloc ${ecoute ? '' : 'verrou'}">
-          <p class="label">Le défi</p>
-          <h3>${l.question}</h3>
-          ${!ecoute ? '<p class="muted">🔒 Disponible après l’écoute.</p>'
+          <p class="label">${tr('defi')}</p>
+          <h3>${c.question}</h3>
+          ${!ecoute ? `<p class="muted">${tr('apresEcoute')}</p>`
             : qok ? (S.qfaux[l.id]
-              ? `<p class="faux">✗ Mauvaise réponse : −${POINTS.erreur} points.</p><p>La bonne réponse était : <strong>${l.choix[l.reponse]}</strong>.</p>`
-              : `<p class="bonne">✓ Bonne réponse : ${l.choix[l.reponse]}</p>`)
-              : `<p class="note" style="margin:0 0 6px">Une seule chance : une mauvaise réponse coûte ${POINTS.erreur} points.</p>
-                 <div class="choices">${choix.map((k) => `<button class="choice" data-action="answer" data-k="${k}">${l.choix[k]}</button>`).join('')}</div>`}
+              ? `<p class="faux">${tr('faux', { p })}</p><p>${tr('bonneEtait')} <strong>${c.choix[l.reponse]}</strong></p>`
+              : `<p class="bonne">${tr('bonne')} ${c.choix[l.reponse]}</p>`)
+              : `<p class="note" style="margin:0 0 6px">${tr('uneChance', { p })}</p>
+                 <div class="choices">${choix.map((k) => `<button class="choice" data-action="answer" data-k="${k}">${c.choix[k]}</button>`).join('')}</div>`}
         </div>
         <div class="bloc ${qok ? '' : 'verrou'}" id="bloc-indice">
-          <p class="label">Trouver l’indice</p>
+          <p class="label">${tr('trouver')}</p>
           ${qok ? `
-            <p>Une lettre est cachée <strong>${l.cacheIndice}</strong>. Explorez tous les coins, puis saisissez-la.</p>
-            <p class="note" style="margin:0">Une seule chance : une mauvaise lettre coûte ${POINTS.erreur} points.</p>
+            <p>${tr('cachee', { ou: c.cacheIndice })}</p>
+            <p class="note" style="margin:0">${tr('uneChanceLettre', { p })}</p>
             <form id="lettre-form" class="lettre-row" novalidate>
-              <label for="f-lettre" class="sr">Lettre trouvée</label>
-              <input id="f-lettre" name="lettre" maxlength="1" autocomplete="off" autocapitalize="characters" placeholder="?">
-              <button class="btn" type="submit">Valider</button>
+              <label for="f-lettre" class="sr">${tr('lettre')}</label>
+              <input id="f-lettre" name="lettre" maxlength="1" autocomplete="off" autocapitalize="characters" placeholder="?" dir="ltr">
+              <button class="btn" type="submit">${tr('valider')}</button>
             </form>
             <p class="error" id="lettre-err" role="alert" hidden></p>
-            <p><button class="btn-link" data-action="aide">Je ne trouve pas l’indice (−${POINTS.erreur} points)</button></p>`
-            : '<p class="muted">🔒 Disponible après le défi.</p>'}
+            <p><button class="btn-link" data-action="aide">${tr('pasTrouve', { p })}</button></p>`
+            : `<p class="muted">${tr('apresDefi')}</p>`}
         </div>`;
     }
 
+    // En arabe, la page du jeu se lit de droite à gauche
+    const rtl = langueJeu() === 'ar' ? ' dir="rtl" lang="ar"' : ` lang="${langueJeu()}"`;
     return `
-    <div class="wrap page-head"><p class="label">Le jeu · ${score()} points</p><h1>${S.stage === 'lieu' ? 'Vous êtes arrivé' : 'En route'}</h1></div>
+    <div class="wrap page-head"${rtl}><p class="label">${tr('points', { n: score() })}</p><h1>${S.stage === 'lieu' ? tr('arrive') : tr('route')}</h1></div>
     <section class="section tight"><div class="wrap game">
-      <div class="etape">
-        <p class="label">Étape ${done + 1} sur ${N}</p>
-        <h2>${l.nom}</h2>
-        <p class="muted">${l.epoque} · ${l.theme}</p>
+      <div class="etape"${rtl}>
+        <p class="label">${tr('etape', { i: done + 1, n: N })}</p>
+        <h2>${c.nom}</h2>
+        <p class="muted">${c.epoque} · ${c.theme}</p>
         ${photo(l.id)}
         ${progressPath()}
         ${corps}
       </div>
-      <p class="note">Code ${S.reservation.code} · <a href="#/carnet">Mon passeport (${done}/${N})</a> · <a href="#/carte">Carte</a></p>
+      <p class="note"${rtl}>Code ${S.reservation.code} · <a href="#/carnet">${tr('passeport')} (${done}/${N})</a> · <a href="#/carte">${tr('carte')}</a></p>
     </div></section>`;
   }
 

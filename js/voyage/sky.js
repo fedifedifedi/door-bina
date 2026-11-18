@@ -2,6 +2,7 @@
 // Au-dessus des nuages flotte le mot de la fin sur Carthage.
 import * as THREE from 'three';
 import { rng, canvasTexture, roundRect, text } from './utils.js';
+import { t, rtl } from './i18n.js';
 
 export const MOODS = {
   sol: { top: '#5c2443', horizon: '#f6cf9f', bottom: '#eab98a', fog: '#efd3b0' },
@@ -163,11 +164,14 @@ export function createHeaven(path, sFin, fin) {
     ctx.strokeStyle = '#CA823C';
     roundRect(ctx, 30, 30, w - 60, h - 60, 50);
     ctx.stroke();
-    text(ctx, 'LE MOT DE LA FIN', w / 2, 150, { font: `700 44px ${SANS}`, color: '#CA823C', spacing: 14 });
+    // En arabe : police Amiri, écriture de droite à gauche, pas d'espacement entre les lettres
+    if ('direction' in ctx) ctx.direction = rtl ? 'rtl' : 'ltr';
+    const corps = rtl ? `400 58px Amiri, serif` : `500 60px ${SERIF}`;
+    text(ctx, rtl ? t('sFin') : t('sFin').toUpperCase(), w / 2, 150, { font: rtl ? `700 56px Amiri, serif` : `700 44px ${SANS}`, color: '#CA823C', spacing: rtl ? 0 : 14 });
     text(ctx, 'قرطاج', w / 2, 330, { font: `700 170px Amiri, serif`, color: '#F6ECD1' });
-    text(ctx, fin.titre, w / 2, 450, { font: `italic 600 76px ${SERIF}`, color: '#f3c08a', maxWidth: w - 200 });
+    text(ctx, fin.titre, w / 2, 450, { font: rtl ? `700 68px Amiri, serif` : `italic 600 76px ${SERIF}`, color: '#f3c08a', maxWidth: w - 200 });
     // Texte sur plusieurs lignes
-    ctx.font = `500 60px ${SERIF}`;
+    ctx.font = corps;
     const words = fin.texte.split(' ');
     const lines = [];
     let line = '';
@@ -176,8 +180,8 @@ export function createHeaven(path, sFin, fin) {
       if (ctx.measureText(test).width > w - 300 && line) { lines.push(line); line = wd; } else line = test;
     }
     if (line) lines.push(line);
-    lines.slice(0, 5).forEach((l, i) => text(ctx, l, w / 2, 580 + i * 82, { font: `500 60px ${SERIF}`, color: '#F6ECD1' }));
-    text(ctx, fin.merci.toUpperCase(), w / 2, h - 110, { font: `700 40px ${SANS}`, color: '#CA823C', spacing: 6, maxWidth: w - 200 });
+    lines.slice(0, 5).forEach((l, i) => text(ctx, l, w / 2, 580 + i * 82, { font: corps, color: '#F6ECD1' }));
+    text(ctx, rtl ? fin.merci : fin.merci.toUpperCase(), w / 2, h - 110, { font: rtl ? `700 50px Amiri, serif` : `700 40px ${SANS}`, color: '#CA823C', spacing: rtl ? 0 : 6, maxWidth: w - 200 });
   });
   const board = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, fog: false }));
   const ahead = path.tangentAt(sFin);

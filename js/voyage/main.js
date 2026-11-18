@@ -8,6 +8,30 @@ import { createWorld, createBeacon } from './world.js';
 import { createRider } from './rider.js';
 import { createUI } from './ui.js';
 import { buildStops, readState, etatArret, maPosition, aCommence, fmtDist } from './stops.js';
+import { t, lang, rtl, LANGUES, choisirLangue, finTraduite } from './i18n.js';
+
+/* ---------- Textes de la page dans la langue choisie, et boutons FR / EN / ع ---------- */
+function traduirePage() {
+  document.documentElement.lang = lang;
+  const set = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+  $('brand-sous').textContent = ' ' + t('sous');
+  set('btn-me-txt', t('maPosition'));
+  set('btn-gps', t('gpsOn'));
+  set('btn-classique', t('classique'));
+  set('hint', t('hint'));
+  set('loader-sub', t('loader'));
+  set('fallback-titre', t('fallbackTitre'));
+  set('fallback-texte', t('fallbackTexte'));
+  set('fallback-btn', t('fallbackBtn'));
+  for (const id of ['hint', 'toast', 'gps-status']) { const el = $(id); if (el) { el.lang = lang; el.dir = rtl ? 'rtl' : 'ltr'; } }
+  const box = $('langues');
+  box.innerHTML = Object.keys(LANGUES).map((k) =>
+    `<button type="button" class="${k === lang ? 'on' : ''}" data-lang="${k}" aria-pressed="${k === lang}" lang="${k}">${LANGUES[k]}</button>`).join('');
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lang]');
+    if (b && b.dataset.lang !== lang) choisirLangue(b.dataset.lang);
+  });
+}
 
 const CHAR_AHEAD = 6;   // distance caméra → cycliste
 const LOOK_AHEAD = 9;   // la caméra regarde un peu plus loin
@@ -22,13 +46,14 @@ function webglOk() {
 }
 
 async function start() {
+  traduirePage();
   if (!webglOk() || !window.DOORBINA_LIEUX) throw new Error('WebGL indisponible');
   const isMobile = matchMedia('(max-width: 760px), (pointer: coarse)').matches;
   const quality = isMobile ? 0.6 : 1;
 
   // Les panneaux sont dessinés avec les polices du site
   await Promise.race([
-    Promise.all(['600 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', 'italic 600 40px "Cormorant Garamond"', '700 40px "Open Sans"', '700 40px Amiri'].map((f) => document.fonts.load(f))),
+    Promise.all(['600 40px "Cormorant Garamond"', 'italic 500 40px "Cormorant Garamond"', 'italic 600 40px "Cormorant Garamond"', '700 40px "Open Sans"', '700 40px Amiri', '400 40px Amiri'].map((f) => document.fonts.load(f))),
     new Promise((r) => setTimeout(r, 2500)),
   ]).catch(() => {});
 
@@ -57,7 +82,7 @@ async function start() {
   const world = createWorld(path, stops, etats, { quality });
   scene.add(world.group);
   const iFin = stops.findIndex((s) => s.type === 'ciel');
-  const heaven = iFin >= 0 ? createHeaven(path, path.stopS[iFin], window.DOORBINA_FIN || { titre: '', texte: '', merci: '' }) : null;
+  const heaven = iFin >= 0 ? createHeaven(path, path.stopS[iFin], finTraduite()) : null;
   if (heaven) scene.add(heaven.group);
   const rider = createRider(S.avatar || 'homme');
   scene.add(rider.root, ...rider.extras);
@@ -111,9 +136,9 @@ async function start() {
       fete.add(P.arrive);
       const st = stops[P.arrive];
       world.celebrate(P.arrive);
-      showToast(`<strong>Vous y êtes : ${st.type === 'retour' ? 'l’agence Door Bina' : st.nom} !</strong>
-        ${st.type === 'retour' ? 'Rendez vos vélos et montrez votre QR de score.' : 'Ouvrez l’étape dans le jeu : l’audio et la question vous attendent.'}
-        <a href="index.html#/jeu">Ouvrir le jeu →</a>`);
+      showToast(`<strong>${t('vousYEtes', { nom: st.type === 'retour' ? t('agence') : st.nom })}</strong>
+        ${st.type === 'retour' ? t('rendezVelos') : t('ouvrezEtape')}
+        <a href="index.html#/jeu">${t('ouvrirJeu')}</a>`);
       if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
     }
     // La vue suit le visiteur
@@ -131,16 +156,16 @@ async function start() {
     const st = $('gps-status');
     if (!gps) { st.hidden = true; return; }
     st.hidden = false;
-    st.innerHTML = `<span class="live-dot"></span>GPS en direct${precision ? ` · ± ${Math.round(precision)} m` : ''}${P && P.arrive != null ? ' · sur place' : P && P.d != null ? ` · ${fmtDist(P.d)} du prochain arrêt` : ''}`;
+    st.innerHTML = `<span class="live-dot"></span>${t('gpsLive')}${precision ? ` · ± ${Math.round(precision)} m` : ''}${P && P.arrive != null ? ` · ${t('surPlace')}` : P && P.d != null ? ` · ${t('duProchain', { d: fmtDist(P.d) })}` : ''}`;
     btnGps.hidden = false;
-    btnGps.textContent = follow ? 'Suivi GPS ✓' : 'Me suivre';
+    btnGps.textContent = follow ? t('suivi') : t('meSuivre');
     btnGps.setAttribute('aria-pressed', String(follow));
   }
   function startFollow() { follow = true; majStatut(); }
   function stopFollow() { if (follow) { follow = false; majStatut(); } }
   function startGps() {
     if (!navigator.geolocation || watch != null) return;
-    btnGps.textContent = 'GPS : recherche…';
+    btnGps.textContent = t('gpsSearch');
     watch = navigator.geolocation.watchPosition(
       (p) => {
         const premier = !gps;
@@ -149,7 +174,7 @@ async function start() {
         if (premier) follow = true; // à la première position, la vue va vers le visiteur
         placeMe();
       },
-      () => { btnGps.textContent = 'GPS refusé'; watch = null; },
+      () => { btnGps.textContent = t('gpsRefuse'); watch = null; },
       { enableHighAccuracy: true, maximumAge: 4000, timeout: 20000 }
     );
   }

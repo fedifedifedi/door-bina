@@ -338,6 +338,107 @@
     99: { nom: 'وقت التاي', recit: 'توّا وقت الراحة. اطلبو تاي بالنعناع، بالبوفريوة كيما نحبّوه في تونس، وتفرّجو في البحر. البحر هذا هو اللي عمل قرطاج. الفينيقيين اللي بناو المدينة جاو من صور، على شط لبنان اليوم. كانو بحّارة ما كيفهمش: يتبعو النجوم ويتاجرو من راس البحر المتوسط لراسو. وفمّا حكاية قديمة تقول اللي واحد قرطاجي اسمو حنّون مشى على طول شطوط إفريقيا الغربية، لبعد مضيق جبل طارق. وفي مراسي قرطاج، كانو يوصلو المعادن والشراب والزيت والصبغة الأرجوانية الغالية. خوذو وقتكم، ومن بعد اكتبو جملة في الباسبور متاعكم: تلقاوها في الكرّاس متاعكم.' }
   };
 
+  /* Le jeu en anglais et en arabe : questions, réponses (même ordre qu'en français, la bonne
+     réponse est donc à la même place), direction, emplacement de l'indice, thème et frise.
+     La derja utilise la version arabe. À faire relire. */
+  window.DOORBINA_JEU = {
+    en: {
+      1: { epoque: '1924', theme: 'The sea and science', question: 'What does “Dar El Hout” mean?', choix: ['The house of the fish', 'The gate of the sea', 'The king’s house'],
+        direction: 'The route starts by the water, in Salammbô: look for the “house of the fish”.', cacheIndice: 'inside',
+        frise: [['Antiquity', 'This shore borders the harbour districts of Carthage.'], ['1924', 'The Salammbô oceanographic station is founded.'], ['Today', 'An institute of marine sciences and its museum, Dar El Hout.']] },
+      2: { epoque: 'Antiquity', theme: 'Punic and Roman daily life', question: 'According to legend, which queen founded Carthage on this hill?', choix: ['Elissa (Dido)', 'Cleopatra', 'Zenobia'],
+        direction: 'Climb Byrsa Hill, the heart of Carthage. The climb is steep: the e-bike helps!', cacheIndice: 'in the Punic quarter',
+        frise: [['8th c. BC', 'Acropolis of Punic Carthage, with its houses.'], ['146 BC', 'Rome destroys the city.'], ['Roman era', 'Rebuilding and large public spaces.'], ['1884–1890', 'Saint Louis Cathedral is built.'], ['Today', 'Archaeological site, museum under renovation.']] },
+      3: { epoque: '1884–1890', theme: 'Protectorate and religious heritage', question: 'To which king is the cathedral dedicated?', choix: ['Louis IX (Saint Louis)', 'Louis XIV', 'Charlemagne'],
+        direction: 'At the top of the hill, look for the large building with two square towers.', cacheIndice: 'inside',
+        frise: [['1270', 'King Louis IX of France dies before Tunis, during a crusade.'], ['1884–1890', 'The cathedral is built, during the French protectorate.'], ['1964', 'The cathedral is no longer a place of worship.'], ['Today', 'The Acropolium: concerts, festivals and exhibitions.']] },
+      4: { epoque: '1875', theme: 'Archaeological memory', question: 'Why is this stage’s clue placed at the entrance?', choix: ['The museum is being renovated', 'The entrance is not free', 'It is too early'],
+        direction: 'Still on the hill, next to the cathedral: the museum building.', cacheIndice: 'at the entrance (museum under renovation)',
+        frise: [['1875', 'A museum is created to gather the finds of Carthage.'], ['20th century', 'It becomes the National Museum of Carthage.'], ['Today', 'Closed for renovation: the clue is placed at the entrance.']] },
+      5: { epoque: '19th c. / 1983', theme: 'Political power and knowledge', question: 'Beit al-Hikma takes the name of which famous institution?', choix: ['The House of Wisdom in Baghdad', 'The Library of Alexandria', 'Zitouna University'],
+        direction: 'Head back down towards the sea: a white palace with arcades, facing the gulf.', cacheIndice: 'inside (at weekends: at the entrance)',
+        frise: [['19th century', 'The palace is built as a residence for dignitaries.'], ['1983', 'The Tunisian Academy, Beit al-Hikma, moves in.'], ['Today', 'Conferences, publications and a library.']] },
+      6: { epoque: '2nd c. / 1964', theme: 'Performance and culture', question: 'Since when has the International Festival of Carthage been held here?', choix: ['1964', '1890', '2003'],
+        direction: 'Go back up towards Odeon Hill: semicircular stands are waiting for you.', cacheIndice: 'in the stands',
+        frise: [['2nd century', 'The Roman theatre is built.'], ['Middle Ages', 'Its stones are reused and the theatre slowly disappears.'], ['20th century', 'Excavation and restoration.'], ['1964', 'The International Festival of Carthage is created.']] },
+      7: { epoque: '2000–2003', theme: 'Contemporary architecture', question: 'Which school of thought did Imam Malik ibn Anas found?', choix: ['The Maliki school', 'The school of Kairouan', 'The school of Athens'],
+        direction: 'Look for the tall white minaret close to the theatre.', cacheIndice: 'in the courtyard',
+        frise: [['8th century', 'Imam Malik ibn Anas teaches in Medina.'], ['2000–2003', 'The mosque is built.'], ['Today', 'A place of prayer and a contemporary monument.']] },
+      8: { epoque: '1960', theme: 'Memory of the Second World War', question: 'What does this cemetery commemorate?', choix: ['The Second World War', 'The Punic Wars', 'The First World War'],
+        direction: 'Due north: long lawns and rows of white crosses.', cacheIndice: 'in the memorial',
+        frise: [['1942–1943', 'North African campaign, during the Second World War.'], ['1960', 'The cemetery and its memorial are opened.'], ['Today', 'A well-kept place of remembrance, open to visitors.']] }
+    },
+    ar: {
+      1: { epoque: '1924', theme: 'البحر والعلم', question: 'ما معنى «دار الحوت»؟', choix: ['بيت السمك', 'باب البحر', 'بيت الملك'],
+        direction: 'تنطلق الرحلة من شاطئ البحر في صلامبو: ابحثوا عن «بيت السمك».', cacheIndice: 'في الداخل',
+        frise: [['العصور القديمة', 'يحاذي هذا الشاطئ الأحياء المينائية لقرطاج.'], ['1924', 'تأسيس محطة علوم البحار في صلامبو.'], ['اليوم', 'معهد لعلوم البحار ومتحفه، دار الحوت.']] },
+      2: { epoque: 'العصور القديمة', theme: 'الحياة اليومية البونيقية والرومانية', question: 'حسب الأسطورة، أيّ ملكة أسّست قرطاج على هذه الهضبة؟', choix: ['عليسة (ديدون)', 'كليوباترا', 'زنوبيا'],
+        direction: 'اصعدوا هضبة بيرصا، قلب قرطاج. الصعود حادّ: الدراجة الكهربائية تساعدكم!', cacheIndice: 'في الحيّ البونيقي',
+        frise: [['القرن 8 ق.م', 'أكروبول قرطاج البونيقية بمنازلها.'], ['146 ق.م', 'روما تدمّر المدينة.'], ['العهد الروماني', 'إعادة البناء وساحات عامة كبيرة.'], ['1884–1890', 'بناء كاتدرائية القديس لويس.'], ['اليوم', 'موقع أثري، ومتحف قيد الترميم.']] },
+      3: { epoque: '1884–1890', theme: 'الحماية والتراث الديني', question: 'لأيّ ملك أُهديت الكاتدرائية؟', choix: ['لويس التاسع (القديس لويس)', 'لويس الرابع عشر', 'شارلمان'],
+        direction: 'على قمة الهضبة، ابحثوا عن المبنى الكبير ذي البرجين المربّعين.', cacheIndice: 'في الداخل',
+        frise: [['1270', 'وفاة ملك فرنسا لويس التاسع أمام تونس، خلال حملة صليبية.'], ['1884–1890', 'بناء الكاتدرائية، في عهد الحماية الفرنسية.'], ['1964', 'الكاتدرائية لم تعد مكانًا للعبادة.'], ['اليوم', 'الأكروبوليوم: حفلات ومهرجانات ومعارض.']] },
+      4: { epoque: '1875', theme: 'الذاكرة الأثرية', question: 'لماذا وُضع دليل هذه المرحلة عند المدخل؟', choix: ['المتحف قيد الترميم', 'الدخول بمقابل', 'الوقت مبكّر جدًا'],
+        direction: 'ما زلتم على الهضبة، بجانب الكاتدرائية: مبنى المتحف.', cacheIndice: 'عند المدخل (المتحف قيد الترميم)',
+        frise: [['1875', 'إنشاء متحف لجمع اكتشافات قرطاج.'], ['القرن العشرون', 'يصبح المتحف الوطني بقرطاج.'], ['اليوم', 'مغلق للترميم: الدليل موضوع عند المدخل.']] },
+      5: { epoque: 'القرن 19 / 1983', theme: 'السلطة السياسية والمعرفة', question: 'يحمل بيت الحكمة اسم أيّ مؤسسة شهيرة؟', choix: ['بيت الحكمة في بغداد', 'مكتبة الإسكندرية', 'جامعة الزيتونة'],
+        direction: 'انزلوا نحو البحر: قصر أبيض بأقواس، يطلّ على الخليج.', cacheIndice: 'في الداخل (في عطلة نهاية الأسبوع: عند المدخل)',
+        frise: [['القرن التاسع عشر', 'بناء القصر، مقرّ إقامة لكبار الشخصيات.'], ['1983', 'المجمع التونسي بيت الحكمة يستقرّ فيه.'], ['اليوم', 'ندوات ومنشورات ومكتبة.']] },
+      6: { epoque: 'القرن 2 / 1964', theme: 'العرض والثقافة', question: 'منذ متى يُقام مهرجان قرطاج الدولي هنا؟', choix: ['1964', '1890', '2003'],
+        direction: 'اصعدوا نحو هضبة الأوديون: تنتظركم مدارج على شكل نصف دائرة.', cacheIndice: 'في المدارج',
+        frise: [['القرن الثاني', 'بناء المسرح الروماني.'], ['العصور الوسطى', 'أُعيد استعمال حجارته فاختفى المسرح شيئًا فشيئًا.'], ['القرن العشرون', 'تنقيب وترميم.'], ['1964', 'تأسيس مهرجان قرطاج الدولي.']] },
+      7: { epoque: '2000–2003', theme: 'العمارة المعاصرة', question: 'أيّ مذهب أسّسه الإمام مالك بن أنس؟', choix: ['المذهب المالكي', 'مدرسة القيروان', 'مدرسة أثينا'],
+        direction: 'ابحثوا عن الصومعة البيضاء العالية قرب المسرح.', cacheIndice: 'في الصحن',
+        frise: [['القرن الثامن', 'الإمام مالك بن أنس يدرّس في المدينة المنورة.'], ['2000–2003', 'بناء الجامع.'], ['اليوم', 'مكان للصلاة ومعلم معاصر.']] },
+      8: { epoque: '1960', theme: 'ذاكرة الحرب العالمية الثانية', question: 'بماذا تذكّر هذه المقبرة؟', choix: ['الحرب العالمية الثانية', 'الحروب البونيقية', 'الحرب العالمية الأولى'],
+        direction: 'شمالًا: مروج طويلة وصفوف من الصلبان البيضاء.', cacheIndice: 'في النصب التذكاري',
+        frise: [['1942–1943', 'حملة شمال إفريقيا، خلال الحرب العالمية الثانية.'], ['1960', 'افتتاح المقبرة ونصبها التذكاري.'], ['اليوم', 'مكان ذاكرة محافظ عليه، مفتوح للزوار.']] }
+    }
+  };
+
+  /* Voyage 3D en anglais et en arabe : fiches courtes des lieux (99 = pause thé),
+     point de retour des vélos et mot de la fin. À faire relire. */
+  window.DOORBINA_TRAD = {
+    en: {
+      fiche: {
+        1: 'Founded in 1924, the Salammbô oceanographic station is now home to a marine research institute and its museum, Dar El Hout: aquariums, shells and marine collections.',
+        2: 'Byrsa Hill was the acropolis of Carthage. Here you can visit a Punic residential quarter, with its streets, houses and cisterns.',
+        3: 'Built between 1884 and 1890, during the French protectorate, the cathedral is dedicated to King Louis IX, who died before Tunis in 1270. Today, as the Acropolium, it hosts concerts and exhibitions.',
+        4: 'Created in 1875 to gather the finds made in Carthage, the museum holds steles, mosaics, ceramics and Punic and Roman objects. It is currently closed for renovation.',
+        5: 'A nineteenth-century palace by the sea which, in 1983, became the seat of the Tunisian Academy of Sciences, Letters and Arts, Beit al-Hikma.',
+        6: 'Built in the 2nd century and extensively restored, the theatre has hosted the International Festival of Carthage since 1964.',
+        7: 'Built between 2000 and 2003, it bears the name of Imam Malik ibn Anas, founder of the Maliki school followed in Tunisia.',
+        8: 'Opened in 1960, the North Africa American Cemetery honours the American soldiers who died in North Africa during the Second World War.',
+        99: 'About 20 minutes to catch your breath facing the sea, with mint tea and pine nuts, a Tunisian custom.'
+      },
+      retour: { nom: 'Bike return point', texte: 'Bring the bikes back to the Door Bina agency. The first group to arrive wins the gift of the day.' },
+      fin: {
+        titre: 'Qart-Hadasht, the “new city”',
+        texte: 'Founded, according to tradition, in 814 BC, destroyed in 146, rebuilt by Rome, sung by poets: Carthage has never stopped being reborn. Today, you are the ones bringing it back to life, one pedal stroke at a time.',
+        merci: 'Thank you for cycling with Door Bina.'
+      }
+    },
+    ar: {
+      fiche: {
+        1: 'تأسست محطة علوم البحار في صلامبو سنة 1924، وتضمّ اليوم معهدًا للبحوث البحرية ومتحفه، دار الحوت: أحواض أسماك وأصداف ومجموعات بحرية.',
+        2: 'كانت هضبة بيرصا أكروبول قرطاج. يمكن هنا زيارة حيّ سكني بونيقي، بشوارعه ومنازله وصهاريجه.',
+        3: 'شُيّدت الكاتدرائية بين 1884 و1890، في عهد الحماية الفرنسية، وهي مُهداة إلى الملك لويس التاسع الذي توفي أمام تونس سنة 1270. وتحتضن اليوم، باسم الأكروبوليوم، حفلات ومعارض.',
+        4: 'أُنشئ المتحف سنة 1875 لجمع الاكتشافات في قرطاج، ويحفظ أنصابًا وفسيفساء وخزفًا وقطعًا بونيقية ورومانية. وهو مغلق حاليًا للترميم.',
+        5: 'قصر من القرن التاسع عشر على شاطئ البحر، أصبح سنة 1983 مقرّ المجمع التونسي للعلوم والآداب والفنون، بيت الحكمة.',
+        6: 'بُني المسرح في القرن الثاني ورُمّم على نطاق واسع، ويحتضن منذ سنة 1964 مهرجان قرطاج الدولي.',
+        7: 'شُيّد الجامع بين 2000 و2003، ويحمل اسم الإمام مالك بن أنس، مؤسس المذهب المالكي المتّبع في تونس.',
+        8: 'افتُتحت المقبرة الأمريكية لشمال إفريقيا سنة 1960، وهي تكرّم الجنود الأمريكيين الذين لقوا حتفهم في شمال إفريقيا خلال الحرب العالمية الثانية.',
+        99: 'نحو عشرين دقيقة للاستراحة قبالة البحر، مع شاي بالنعناع والصنوبر، عادة تونسية.'
+      },
+      retour: { nom: 'نقطة إرجاع الدراجات', texte: 'أعيدوا الدراجات إلى وكالة دوربينا. أول مجموعة تصل تفوز بهدية اليوم.' },
+      fin: {
+        titre: 'قرت حدشت، «المدينة الجديدة»',
+        texte: 'تأسست حسب التقاليد سنة 814 قبل الميلاد، ودُمّرت سنة 146، وأعادت روما بناءها، وتغنّى بها الشعراء: لم تكفّ قرطاج يومًا عن الولادة من جديد. واليوم، أنتم من يعيد إليها الحياة، بضربة دوّاسة بعد أخرى.',
+        merci: 'شكرًا لأنكم جُبتم قرطاج مع دوربينا.'
+      }
+    }
+  };
+
   /* Le mot de la fin, dans le ciel, à la fin du voyage 3D (voyage.html). */
   window.DOORBINA_FIN = {
     titre: 'Qart-Hadasht, la « ville nouvelle »',
