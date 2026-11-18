@@ -169,6 +169,8 @@ button { font: inherit; }
 .toast strong { display: block; font: 600 26px/1.1 var(--serif); margin-bottom: 4px; }
 .toast a { display: inline-block; margin-top: 8px; color: #f3c08a; font-weight: 700; }
 @keyframes toast { from { opacity: 0; transform: translate(-50%, 12px); } }
+/* Tournage de la vidéo (?capture=1) : le message d'arrivée passe en haut à gauche */
+.capture .toast { top: 84px; bottom: auto; left: 24px; transform: none; width: 440px; animation: none; }
 
 /* Chargement et secours */
 .loader {

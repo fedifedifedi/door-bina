@@ -322,7 +322,9 @@
     const lg = langueAudio(), t = texte(x, lg);
     const dir = arabe(t.lg) ? ' dir="rtl"' : '';
     const mp3 = fichierAudio(x, lg);
-    return `<div class="audio${compact ? ' compact' : ''}" data-id="${x.id}" data-state="idle">
+    // Tout le lecteur dans un seul bloc : il reste groupé dans les grilles (ex. « Mes audioguides »)
+    return `<div class="lecteur">
+    <div class="audio${compact ? ' compact' : ''}" data-id="${x.id}" data-state="idle">
       <button class="audio-btn" data-action="audio" data-id="${x.id}" aria-label="Écouter le récit : ${x.nom}">
         <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
         <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
@@ -348,7 +350,8 @@
       <summary>${tr('lireTexte')}</summary>
       <p lang="${LANG_HTML[t.lg]}"${dir}>${t.recit}</p>
       ${ecoute ? '' : `<button class="btn-link" data-action="lu" data-id="${x.id}">${tr('luEntier')}</button>`}
-    </details>`}`;
+    </details>`}
+    </div>`;
   }
   /* ---------- Voix de synthèse ----------
      Le téléphone fournit les voix. On prend la plus naturelle pour la langue,

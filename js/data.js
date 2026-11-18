@@ -243,7 +243,7 @@
   window.DOORBINA_CODE = {
     mot: 'HANNIBAL',
     secret: 'Hannibal Barca, le plus célèbre des généraux de Carthage. En 218 avant notre ère, il quitta l’Espagne avec son armée et ses éléphants, franchit les Pyrénées puis les Alpes, et battit Rome à plusieurs reprises sur son propre sol. Son nom est resté, partout dans le monde, le symbole de l’audace carthaginoise.',
-    cadeau: 'Rapportez vos vélos et montrez ce QR code à l’équipe Door Bina. À la fin de la journée, le groupe en tête du classement gagne un cadeau local !'
+    cadeau: 'Rapportez vos vélos et montrez ce QR code à l’équipe Door Bina. À la fin de la journée, le groupe en tête du classement gagne un cadeau historique !'
   };
 
   /* Espace équipe (page #/equipe) : code PIN d'accès et « sel » qui signe les scores.

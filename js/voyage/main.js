@@ -117,7 +117,8 @@ async function start() {
     toast.innerHTML = html;
     toast.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { toast.hidden = true; }, 9000);
+    // (en mode tournage, le message reste affiché pendant toute la scène)
+    toastTimer = setTimeout(() => { toast.hidden = true; }, location.search.includes('capture') ? 600000 : 9000);
   }
 
   function placeMe() {
@@ -205,10 +206,12 @@ async function start() {
   let first = true;
   const clock = new THREE.Clock();
   let prevCharS = null;
+  // Mode tournage (?capture=1) : chaque image est calculée à la demande, pour filmer une vidéo fluide
+  let fakeDt = null, simT = 0;
 
   function tick() {
-    const dt = Math.min(clock.getDelta(), 0.05);
-    const t = clock.elapsedTime;
+    const dt = fakeDt != null ? fakeDt : Math.min(clock.getDelta(), 0.05);
+    const t = fakeDt != null ? (simT += fakeDt) : clock.elapsedTime;
     progress += (target - progress) * Math.min(1, dt * 4);
     if (Math.abs(target - progress) < 1e-5) progress = target;
     const camS = progress * travel;
@@ -246,6 +249,20 @@ async function start() {
     renderer.setSize(innerWidth, innerHeight, false);
   });
   tick();
+  if (params.has('capture')) {
+    document.documentElement.classList.add('capture'); // message d'arrivée en haut : le bas reste aux sous-titres
+    // Tournage : on place le cycliste à la distance charS, puis on calcule une image de durée dt
+    window.__voyage = {
+      stopS: path.stopS, meS: () => meS, end: travel + CHAR_AHEAD,
+      frame(charS, dt = 1 / 30) {
+        target = progress = Math.min(1, Math.max(0, (charS - CHAR_AHEAD) / travel));
+        fakeDt = dt;
+        tick();
+        return true;
+      },
+    };
+    return;
+  }
   renderer.setAnimationLoop(tick);
 }
 
